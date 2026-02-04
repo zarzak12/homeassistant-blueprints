@@ -37,14 +37,14 @@ blueprint:
 
     contract_power:
       name: Puissance souscrite compteur
-      description: Puissance maximale autorisée par le contrat (W)
-      default: 9000
+      description: Puissance maximale autorisée par le contrat (kVA)
+      default: 7
       selector:
         number:
-          min: 3000
-          max: 36000
-          step: 500
-          unit_of_measurement: "W"
+          min: 3
+          max: 36
+          step: 1
+          unit_of_measurement: "kVA"
 
     zendure_manager:
       name: Zendure Manager
