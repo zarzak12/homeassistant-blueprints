@@ -1,0 +1,265 @@
+blueprint:
+  name: Zendure - Charge Progressive Tempo + Solaire
+  description: >
+    Charge progressive de la batterie Zendure en Heures Creuses
+    selon le niveau de batterie, la couleur Tempo et la prévision solaire du lendemain,
+    avec limitation automatique pour ne pas dépasser la puissance souscrite du compteur.
+  domain: automation
+
+  input:
+    tempo_sensor:
+      name: Capteur Tempo
+      description: Couleur Tempo du lendemain (Bleu / Blanc / Rouge)
+      selector:
+        entity:
+          domain: sensor
+
+    battery_level_sensor:
+      name: Niveau de batterie
+      description: Niveau de charge de la batterie (%)
+      selector:
+        entity:
+          domain: sensor
+
+    solar_forecast_sensor:
+      name: Prévision solaire demain
+      description: Énergie solaire prévue demain (kWh)
+      selector:
+        entity:
+          domain: sensor
+
+    house_power_sensor:
+      name: Consommation instantanée maison
+      description: Puissance actuellement tirée sur le réseau (W)
+      selector:
+        entity:
+          domain: sensor
+
+    contract_power:
+      name: Puissance souscrite compteur
+      description: Puissance maximale autorisée par le contrat (W)
+      default: 9000
+      selector:
+        number:
+          min: 3000
+          max: 36000
+          step: 500
+          unit_of_measurement: "W"
+
+    zendure_manager:
+      name: Zendure Manager
+      description: Entité de contrôle du Zendure Manager
+      selector:
+        entity:
+          domain: select
+
+    input_limit:
+      name: Limite d'entrée
+      description: Entité pour définir la puissance de charge réseau
+      selector:
+        entity:
+          domain: number
+
+    ac_mode:
+      name: Mode AC
+      description: Entité pour définir le mode AC
+      selector:
+        entity:
+          domain: select
+
+    charge_time:
+      name: Heure de déclenchement
+      default: "22:00:00"
+      selector:
+        time:
+
+    low_battery_threshold:
+      name: Seuil batterie faible
+      default: 30
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+
+    medium_battery_threshold:
+      name: Seuil batterie moyenne
+      default: 60
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+
+    solar_medium_threshold:
+      name: Seuil solaire moyen
+      default: 3.5
+      selector:
+        number:
+          min: 0
+          max: 50
+          step: 0.1
+          unit_of_measurement: "kWh"
+
+    solar_good_threshold:
+      name: Seuil solaire élevé
+      default: 7
+      selector:
+        number:
+          min: 0
+          max: 50
+          step: 0.1
+          unit_of_measurement: "kWh"
+
+    high_power_limit:
+      name: Puissance charge rapide
+      default: 1700
+      selector:
+        number:
+          min: 0
+          max: 2400
+          unit_of_measurement: "W"
+
+    medium_power_limit:
+      name: Puissance charge normale
+      default: 1200
+      selector:
+        number:
+          min: 0
+          max: 2400
+          unit_of_measurement: "W"
+
+    low_power_limit:
+      name: Puissance charge douce
+      default: 600
+      selector:
+        number:
+          min: 0
+          max: 2400
+          unit_of_measurement: "W"
+
+trigger:
+  - platform: time
+    at: !input charge_time
+
+condition:
+  - condition: or
+    conditions:
+      - condition: state
+        entity_id: !input tempo_sensor
+        state: "Blanc"
+      - condition: state
+        entity_id: !input tempo_sensor
+        state: "Rouge"
+
+action:
+  # Sécurité : on coupe avant décision
+  - action: select.select_option
+    target:
+      entity_id: !input zendure_manager
+    data:
+      option: "off"
+
+  - choose:
+      # ☀️ Soleil élevé → pas de charge réseau
+      - conditions:
+          - condition: numeric_state
+            entity_id: !input solar_forecast_sensor
+            above: !input solar_good_threshold
+        sequence:
+          - action: select.select_option
+            target:
+              entity_id: !input zendure_manager
+            data:
+              option: "off"
+
+      # 🌤️ Soleil moyen → charge douce limitée compteur
+      - conditions:
+          - condition: numeric_state
+            entity_id: !input solar_forecast_sensor
+            above: !input solar_medium_threshold
+            below: !input solar_good_threshold
+        sequence:
+          - action: number.set_value
+            target:
+              entity_id: !input input_limit
+            data:
+              value: >
+                {{ [
+                  (states('!input contract_power') | float(0)
+                  - states('!input house_power_sensor') | float(0)),
+                  states('!input low_power_limit') | float(0),
+                  0
+                ] | sort | nth(1) | round(0) }}
+
+          - action: select.select_option
+            target:
+              entity_id: !input ac_mode
+            data:
+              option: "input"
+
+      # 🌧️ Peu de soleil → charge selon batterie + compteur
+      - conditions:
+          - condition: numeric_state
+            entity_id: !input solar_forecast_sensor
+            below: !input solar_medium_threshold
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: numeric_state
+                    entity_id: !input battery_level_sensor
+                    below: !input low_battery_threshold
+                sequence:
+                  - action: number.set_value
+                    target:
+                      entity_id: !input input_limit
+                    data:
+                      value: >
+                        {{ [
+                          (states('!input contract_power') | float(0)
+                          - states('!input house_power_sensor') | float(0)),
+                          states('!input high_power_limit') | float(0),
+                          0
+                        ] | sort | nth(1) | round(0) }}
+
+              - conditions:
+                  - condition: numeric_state
+                    entity_id: !input battery_level_sensor
+                    below: !input medium_battery_threshold
+                sequence:
+                  - action: number.set_value
+                    target:
+                      entity_id: !input input_limit
+                    data:
+                      value: >
+                        {{ [
+                          (states('!input contract_power') | float(0)
+                          - states('!input house_power_sensor') | float(0)),
+                          states('!input medium_power_limit') | float(0),
+                          0
+                        ] | sort | nth(1) | round(0) }}
+
+              - conditions:
+                  - condition: numeric_state
+                    entity_id: !input battery_level_sensor
+                    above: !input medium_battery_threshold
+                sequence:
+                  - action: number.set_value
+                    target:
+                      entity_id: !input input_limit
+                    data:
+                      value: >
+                        {{ [
+                          (states('!input contract_power') | float(0)
+                          - states('!input house_power_sensor') | float(0)),
+                          states('!input low_power_limit') | float(0),
+                          0
+                        ] | sort | nth(1) | round(0) }}
+
+          - action: select.select_option
+            target:
+              entity_id: !input ac_mode
+            data:
+              option: "input"
+
+mode: single
