@@ -1,0 +1,60 @@
+blueprint:
+  name: Zendure - Mode Excédent Journée
+  description: Active le mode smart/excédent solaire en journée pour optimiser l'utilisation du surplus solaire
+  domain: automation
+  input:
+    zendure_manager:
+      name: Zendure Manager
+      description: Entité de contrôle du Zendure Manager
+      selector:
+        entity:
+          domain: select
+    operation_mode:
+      name: Mode de fonctionnement
+      description: Mode à activer pendant la journée
+      default: "smart"
+      selector:
+        select:
+          options:
+            - label: "Couplage intelligent (Smart)"
+              value: "smart"
+            - label: "Charge intelligente"
+              value: "smart_charging"
+            - label: "Décharge intelligente"
+              value: "smart_discharging"
+            - label: "Puissance manuelle"
+              value: "manual"
+            - label: "Arrêt"
+              value: "off"
+    start_time:
+      name: Heure de début
+      description: Heure de passage en mode sélectionné
+      default: "06:00:00"
+      selector:
+        time:
+    end_time:
+      name: Heure de fin
+      description: Heure de fin du mode sélectionné
+      default: "22:00:00"
+      selector:
+        time:
+
+triggers:
+  - platform: time
+    at: !input start_time
+  - platform: homeassistant
+    event: start
+
+conditions:
+  - condition: time
+    after: !input start_time
+    before: !input end_time
+
+actions:
+  - action: select.select_option
+    target:
+      entity_id: !input zendure_manager
+    data:
+      option: !input operation_mode
+
+mode: single
