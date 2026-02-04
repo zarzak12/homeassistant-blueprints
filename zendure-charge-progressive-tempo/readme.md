@@ -1,6 +1,6 @@
 # Zendure – Charge Progressive Tempo + Solaire ☀️⚡
 
-[![Importer dans Home Assistant](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https://raw.githubusercontent.com/zarzak12/homeassistant-blueprints/main/zendure-charge-progressive-tempo/zendure_charge_progressive_tempo.yaml)
+[![Importer dans Home Assistant](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2Fzarzak12%2Fhomeassistant-blueprints%2F001357ceddfc6a0c1d0d707076edadd77a59d20a%2Fzendure-charge-progressive-tempo%2Fzendure-charge-progressive-tempo.yaml)
 
 ---
 
