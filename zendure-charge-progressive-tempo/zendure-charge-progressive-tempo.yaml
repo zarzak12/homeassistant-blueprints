@@ -1,43 +1,49 @@
 blueprint:
-  name: Zendure – Charge Progressive Tempo + Solaire
+  name: Zendure - Charge Progressive Tempo + Solaire
   description: >
-    Charge intelligente de la batterie Zendure selon la couleur Tempo,
-    le niveau de batterie et la prévision de production solaire (Forecast Solar).
+    Charge progressive de la batterie Zendure en Heures Creuses
+    selon le niveau de batterie, la couleur Tempo et la prévision solaire du lendemain.
   domain: automation
 
   input:
     tempo_sensor:
-      name: Capteur Tempo (demain)
-      selector:
-        entity:
-          domain: sensor
-
-    solar_forecast_sensor:
-      name: Prévision solaire (kWh demain)
+      name: Capteur Tempo
+      description: Couleur Tempo du lendemain (Bleu / Blanc / Rouge)
       selector:
         entity:
           domain: sensor
 
     battery_level_sensor:
-      name: Niveau de batterie (%)
+      name: Niveau de batterie
+      description: Niveau de charge de la batterie (%)
+      selector:
+        entity:
+          domain: sensor
+
+    solar_forecast_sensor:
+      name: Prévision solaire demain
+      description: Énergie solaire prévue demain (kWh)
       selector:
         entity:
           domain: sensor
 
     zendure_manager:
       name: Zendure Manager
+      description: Entité de contrôle du Zendure Manager
       selector:
         entity:
           domain: select
 
     input_limit:
-      name: Limite de puissance AC (W)
+      name: Limite d'entrée
+      description: Entité pour définir la puissance de charge réseau
       selector:
         entity:
           domain: number
 
     ac_mode:
-      name: Mode AC Zendure
+      name: Mode AC
+      description: Entité pour définir le mode AC
       selector:
         entity:
           domain: select
@@ -48,30 +54,8 @@ blueprint:
       selector:
         time:
 
-    # --- Seuils solaires ---
-    solar_high_threshold:
-      name: Seuil solaire haut (kWh)
-      default: 2.0
-      selector:
-        number:
-          min: 0
-          max: 20
-          step: 0.1
-          unit_of_measurement: kWh
-
-    solar_medium_threshold:
-      name: Seuil solaire moyen (kWh)
-      default: 1.0
-      selector:
-        number:
-          min: 0
-          max: 20
-          step: 0.1
-          unit_of_measurement: kWh
-
-    # --- Seuils batterie ---
     low_battery_threshold:
-      name: Batterie faible (%)
+      name: Seuil batterie faible
       default: 30
       selector:
         number:
@@ -80,7 +64,7 @@ blueprint:
           unit_of_measurement: "%"
 
     medium_battery_threshold:
-      name: Batterie moyenne (%)
+      name: Seuil batterie moyenne
       default: 60
       selector:
         number:
@@ -88,33 +72,54 @@ blueprint:
           max: 100
           unit_of_measurement: "%"
 
-    # --- Puissances ---
+    solar_medium_threshold:
+      name: Seuil solaire moyen
+      description: Au-dessus de ce seuil, charge réseau réduite (kWh)
+      default: 1
+      selector:
+        number:
+          min: 0
+          max: 10
+          step: 0.1
+          unit_of_measurement: "kWh"
+
+    solar_good_threshold:
+      name: Seuil solaire élevé
+      description: Au-dessus de ce seuil, pas de charge réseau (kWh)
+      default: 2
+      selector:
+        number:
+          min: 0
+          max: 10
+          step: 0.1
+          unit_of_measurement: "kWh"
+
     high_power_limit:
-      name: Puissance charge forte (W)
+      name: Puissance charge rapide
       default: 1700
       selector:
         number:
           min: 0
           max: 2400
-          unit_of_measurement: W
+          unit_of_measurement: "W"
 
     medium_power_limit:
-      name: Puissance charge normale (W)
+      name: Puissance charge normale
       default: 1200
       selector:
         number:
           min: 0
           max: 2400
-          unit_of_measurement: W
+          unit_of_measurement: "W"
 
     low_power_limit:
-      name: Puissance charge douce (W)
+      name: Puissance charge douce
       default: 600
       selector:
         number:
           min: 0
           max: 2400
-          unit_of_measurement: W
+          unit_of_measurement: "W"
 
 trigger:
   - platform: time
@@ -131,7 +136,7 @@ condition:
         state: "Rouge"
 
 action:
-  # Sécurité : on coupe avant de décider
+  # Sécurité : on coupe avant décision
   - action: select.select_option
     target:
       entity_id: !input zendure_manager
@@ -143,7 +148,7 @@ action:
       - conditions:
           - condition: numeric_state
             entity_id: !input solar_forecast_sensor
-            above: !input solar_high_threshold
+            above: !input solar_good_threshold
         sequence:
           - action: select.select_option
             target:
@@ -156,20 +161,21 @@ action:
           - condition: numeric_state
             entity_id: !input solar_forecast_sensor
             above: !input solar_medium_threshold
-            below: !input solar_high_threshold
+            below: !input solar_good_threshold
         sequence:
           - action: number.set_value
             target:
               entity_id: !input input_limit
             data:
               value: !input low_power_limit
+
           - action: select.select_option
             target:
               entity_id: !input ac_mode
             data:
               option: "input"
 
-      # 🌧️ Peu de soleil → charge selon niveau batterie
+      # 🌧️ Peu de soleil → charge selon batterie
       - conditions:
           - condition: numeric_state
             entity_id: !input solar_forecast_sensor
