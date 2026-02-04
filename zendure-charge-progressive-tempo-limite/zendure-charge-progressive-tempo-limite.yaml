@@ -186,13 +186,13 @@ action:
             data:
               value: >
                 {{
-                    [
-                      (contract_power | float(0) * 1000)
-                      - states(house_power_sensor) | float(0),
-                      low_power_limit | float(0),
-                      0
-                    ] | sort | nth(1) | round(0)
-                  }}
+                  [
+                    (contract_power | float(0) * 1000)
+                    - states(house_power_sensor) | float(0),
+                    low_power_limit | float(0),
+                    0
+                  ] | sort | nth(1) | round(0)
+                }}
 
           - action: select.select_option
             target:
@@ -217,12 +217,14 @@ action:
                       entity_id: !input input_limit
                     data:
                       value: >
-                        {{ [
-                          (contract_power | float(0) * 1000)
-                          - states(house_power_sensor) | float(0),
-                          high_power_limit | float(0),
-                          0
-                        ] | sort | nth(1) | round(0) }}
+                        {{
+                          [
+                            (contract_power | float(0) * 1000)
+                            - states(house_power_sensor) | float(0),
+                            high_power_limit | float(0),
+                            0
+                          ] | sort | nth(1) | round(0)
+                        }}
 
               - conditions:
                   - condition: numeric_state
@@ -234,12 +236,14 @@ action:
                       entity_id: !input input_limit
                     data:
                       value: >
-                        {{ [
-                          (contract_power | float(0) * 1000)
-                          - states(house_power_sensor) | float(0),
-                          medium_power_limit | float(0),
-                          0
-                        ] | sort | nth(1) | round(0) }}
+                        {{
+                          [
+                            (contract_power | float(0) * 1000)
+                            - states(house_power_sensor) | float(0),
+                            medium_power_limit | float(0),
+                            0
+                          ] | sort | nth(1) | round(0)
+                        }}
 
               - conditions:
                   - condition: numeric_state
@@ -251,12 +255,14 @@ action:
                       entity_id: !input input_limit
                     data:
                       value: >
-                        {{ [
-                          (contract_power | float(0) * 1000)
-                          - states(house_power_sensor) | float(0),
-                          low_power_limit | float(0),
-                          0
-                        ] | sort | nth(1) | round(0) }}
+                        {{
+                          [
+                            (contract_power | float(0) * 1000)
+                            - states(house_power_sensor) | float(0),
+                            low_power_limit | float(0),
+                            0
+                          ] | sort | nth(1) | round(0)
+                        }}
 
           - action: select.select_option
             target:
