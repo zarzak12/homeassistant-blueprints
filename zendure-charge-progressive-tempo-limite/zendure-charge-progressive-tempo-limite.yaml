@@ -48,21 +48,18 @@ blueprint:
 
     zendure_manager:
       name: Zendure Manager
-      description: Entité de contrôle du Zendure Manager
       selector:
         entity:
           domain: select
 
     input_limit:
       name: Limite d'entrée
-      description: Entité pour définir la puissance de charge réseau
       selector:
         entity:
           domain: number
 
     ac_mode:
       name: Mode AC
-      description: Entité pour définir le mode AC
       selector:
         entity:
           domain: select
@@ -153,21 +150,20 @@ condition:
         state: "Rouge"
 
 action:
-  # Sécurité : on coupe avant décision
-  - action: select.select_option
+  - service: select.select_option
     target:
       entity_id: !input zendure_manager
     data:
       option: "off"
 
   - choose:
-      # ☀️ Soleil élevé → pas de charge réseau
+      # ☀️ Soleil élevé → pas de charge
       - conditions:
           - condition: numeric_state
             entity_id: !input solar_forecast_sensor
             above: !input solar_good_threshold
         sequence:
-          - action: select.select_option
+          - service: select.select_option
             target:
               entity_id: !input zendure_manager
             data:
@@ -180,19 +176,18 @@ action:
             above: !input solar_medium_threshold
             below: !input solar_good_threshold
         sequence:
-          - action: number.set_value
+          - service: number.set_value
             target:
               entity_id: !input input_limit
             data:
               value: >
                 {{ [
-                  (states('!input contract_power') | float(0)
+                  (!input contract_power * 1000
                   - states('!input house_power_sensor') | float(0)),
-                  states('!input low_power_limit') | float(0),
+                  !input low_power_limit,
                   0
                 ] | sort | nth(1) | round(0) }}
-
-          - action: select.select_option
+          - service: select.select_option
             target:
               entity_id: !input ac_mode
             data:
@@ -210,15 +205,15 @@ action:
                     entity_id: !input battery_level_sensor
                     below: !input low_battery_threshold
                 sequence:
-                  - action: number.set_value
+                  - service: number.set_value
                     target:
                       entity_id: !input input_limit
                     data:
                       value: >
                         {{ [
-                          (states('!input contract_power') | float(0)
+                          (!input contract_power * 1000
                           - states('!input house_power_sensor') | float(0)),
-                          states('!input high_power_limit') | float(0),
+                          !input high_power_limit,
                           0
                         ] | sort | nth(1) | round(0) }}
 
@@ -227,15 +222,15 @@ action:
                     entity_id: !input battery_level_sensor
                     below: !input medium_battery_threshold
                 sequence:
-                  - action: number.set_value
+                  - service: number.set_value
                     target:
                       entity_id: !input input_limit
                     data:
                       value: >
                         {{ [
-                          (states('!input contract_power') | float(0)
+                          (!input contract_power * 1000
                           - states('!input house_power_sensor') | float(0)),
-                          states('!input medium_power_limit') | float(0),
+                          !input medium_power_limit,
                           0
                         ] | sort | nth(1) | round(0) }}
 
@@ -244,19 +239,19 @@ action:
                     entity_id: !input battery_level_sensor
                     above: !input medium_battery_threshold
                 sequence:
-                  - action: number.set_value
+                  - service: number.set_value
                     target:
                       entity_id: !input input_limit
                     data:
                       value: >
                         {{ [
-                          (states('!input contract_power') | float(0)
+                          (!input contract_power * 1000
                           - states('!input house_power_sensor') | float(0)),
-                          states('!input low_power_limit') | float(0),
+                          !input low_power_limit,
                           0
                         ] | sort | nth(1) | round(0) }}
 
-          - action: select.select_option
+          - service: select.select_option
             target:
               entity_id: !input ac_mode
             data:
