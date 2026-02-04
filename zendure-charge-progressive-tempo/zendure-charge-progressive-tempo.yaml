@@ -75,22 +75,22 @@ blueprint:
     solar_medium_threshold:
       name: Seuil solaire moyen
       description: Au-dessus de ce seuil, charge réseau réduite (kWh)
-      default: 1
+      default: 3.5
       selector:
         number:
           min: 0
-          max: 10
+          max: 50
           step: 0.1
           unit_of_measurement: "kWh"
 
     solar_good_threshold:
       name: Seuil solaire élevé
       description: Au-dessus de ce seuil, pas de charge réseau (kWh)
-      default: 2
+      default: 7
       selector:
         number:
           min: 0
-          max: 10
+          max: 50
           step: 0.1
           unit_of_measurement: "kWh"
 
