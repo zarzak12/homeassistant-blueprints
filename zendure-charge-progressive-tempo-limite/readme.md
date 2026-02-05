@@ -12,6 +12,8 @@ Ce blueprint Home Assistant permet de **gérer intelligemment la charge d’une 
 *   la **puissance instantanée consommée par la maison**
 *   la **puissance maximale du contrat électrique** (3 à 36 kVA)
 
+*   **Avant toute chose il faudra désactiver le HEMS, sinon le pilotage, via Home Assistant, ne fonctionnera pas**
+
 Grâce à ces données, la puissance de charge est ajustée dynamiquement pour **optimiser la consommation**, **éviter les dépassements**, et **maximiser l’utilisation de l’énergie solaire**.
 
 ***
