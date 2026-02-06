@@ -169,9 +169,12 @@ action:
 
   # Calcul marge puissance disponible
   - variables:
-      puissance_max_w: "{{ (inputs.puissance_max_kva | int) * 1000 }}"
-      conso_maison: "{{ states(inputs.home_power_sensor) | float(0) }}"
-      marge_dispo: "{{ puissance_max_w - conso_maison }}"
+    puissance_max_kva: !input puissance_max_kva
+    home_power_sensor: !input home_power_sensor
+
+    puissance_max_w: "{{ puissance_max_kva | int * 1000 }}"
+    conso_maison: "{{ states(home_power_sensor) | float(0) }}"
+    marge_dispo: "{{ puissance_max_w - conso_maison }}"
 
   - choose:
 
