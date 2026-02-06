@@ -160,8 +160,12 @@ trigger:
     entity_id: !input home_power_sensor
 
 condition:
-  - condition: time
-    after: !input charge_time
+  - condition: and
+    conditions:
+      - condition: time
+        after: !input charge_time
+      - condition: time
+        before: !input end_charge_time
     
   - condition: or
     conditions:
