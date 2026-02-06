@@ -38,7 +38,12 @@ blueprint:
       default: "22:00:00"
       selector:
         time:
-
+    ac_mode:
+      name: Mode AC Zendure
+      description: Entité du mode AC (input / output)
+      selector:
+        entity:
+          domain: select
 triggers:
   - platform: time
     at: !input start_time
@@ -51,6 +56,13 @@ conditions:
     before: !input end_time
 
 actions:
+  # 🔌 Stop toute charge batterie depuis le réseau
+  - action: select.select_option
+    target:
+      entity_id: !input ac_mode
+    data:
+      option: "output"
+      
   - action: select.select_option
     target:
       entity_id: !input zendure_manager
