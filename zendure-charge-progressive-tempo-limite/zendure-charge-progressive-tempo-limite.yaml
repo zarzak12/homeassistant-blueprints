@@ -54,13 +54,6 @@ blueprint:
       default: "22:00:00"
       selector:
         time:
-        
-    end_charge_time:
-      name: Heure de fin de charge
-      description: Heure à laquelle la charge réseau s'arrête
-      default: "06:00:00"
-      selector:
-        time:
 
     low_battery_threshold:
       name: Seuil batterie faible
@@ -151,22 +144,11 @@ trigger:
   - platform: time
     at: !input charge_time
     id: start_charge
-
-  - platform: time
-    at: !input end_charge_time
-    id: end_charge
   
   - platform: state
     entity_id: !input home_power_sensor
 
 condition:
-  - condition: and
-    conditions:
-      - condition: time
-        after: !input charge_time
-      - condition: time
-        before: !input end_charge_time
-    
   - condition: or
     conditions:
       - condition: state
@@ -193,25 +175,6 @@ action:
       marge_dispo: "{{ puissance_max_w - conso_maison }}"
 
   - choose:
-      # ⛔ Heure de fin → arrêt charge réseau
-      - conditions:
-          - condition: trigger
-            id: end_charge
-        sequence:
-          - action: select.select_option
-            target:
-              entity_id: !input ac_mode
-            data:
-              option: "output"
-
-          - action: select.select_option
-            target:
-              entity_id: !input zendure_manager
-            data:
-              option: "off"
-
-          - stop: "Fin de période HC – passage en mode output"
-
       # ☀️ Soleil élevé → pas de charge réseau
       - conditions:
           - condition: numeric_state
