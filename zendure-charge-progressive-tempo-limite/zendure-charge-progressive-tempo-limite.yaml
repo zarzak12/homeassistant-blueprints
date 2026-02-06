@@ -54,6 +54,12 @@ blueprint:
       default: "22:00:00"
       selector:
         time:
+        
+    charge_end:
+      name: Heure de fin
+      default: "6:00:00"
+      selector:
+        time:
 
     low_battery_threshold:
       name: Seuil batterie faible
@@ -143,13 +149,14 @@ blueprint:
 trigger:
   - platform: time
     at: !input charge_time
-    
   
   - platform: state
     entity_id: !input home_power_sensor
 
-
 condition:
+  - condition: time
+    after: !input charge_time
+    
   - condition: or
     conditions:
       - condition: state
