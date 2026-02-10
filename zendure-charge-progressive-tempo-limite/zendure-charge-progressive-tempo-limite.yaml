@@ -256,19 +256,19 @@ action:
     		      max_soc_sun_medium: !input max_soc_sun_medium
     		      max_soc_sun_low: !input max_soc_sun_low
               
-              pmax: "{{ (inputs.puissance_max_kva | int) * 1000 }}"
-              conso: "{{ states(inputs.home_power_sensor) | float(0) }}"
+              pmax: "{{ (puissance_max_kva | int) * 1000 }}"
+              conso: "{{ states(home_power_sensor) | float(0) }}"
               marge: "{{ pmax - conso }}"
-              soc_actuel: "{{ states(inputs.battery_level_sensor) | float(0) }}"
-              sun: "{{ states(inputs.solar_forecast_sensor) | float(0) }}"
+              soc_actuel: "{{ states(battery_level_sensor) | float(0) }}"
+              sun: "{{ states(solar_forecast_sensor) | float(0) }}"
 
               max_soc: >
-                {% if sun >= inputs.solar_good_threshold %}
-                  {{ inputs.max_soc_sun_high }}
-                {% elif sun >= inputs.solar_medium_threshold %}
-                  {{ inputs.max_soc_sun_medium }}
+                {% if sun >= solar_good_threshold %}
+                  {{ max_soc_sun_high }}
+                {% elif sun >= solar_medium_threshold %}
+                  {{ max_soc_sun_medium }}
                 {% else %}
-                  {{ inputs.max_soc_sun_low }}
+                  {{ max_soc_sun_low }}
                 {% endif %}
 
           # STOP SI SOC ⩾ SOC MAX
