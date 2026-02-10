@@ -247,14 +247,14 @@ action:
           # VARIABLES ÉNERGIE
           - variables:
               puissance_max_kva: !input puissance_max_kva
-    		      home_power_sensor: !input home_power_sensor
-    		      battery_level_sensor: !input battery_level_sensor
-    		      solar_forecast_sensor: !input solar_forecast_sensor
-    		      solar_good_threshold: !input solar_good_threshold
-    		      max_soc_sun_high: !input max_soc_sun_high
-    		      solar_medium_threshold: !input solar_medium_threshold
-    		      max_soc_sun_medium: !input max_soc_sun_medium
-    		      max_soc_sun_low: !input max_soc_sun_low
+              home_power_sensor: !input home_power_sensor
+              battery_level_sensor: !input battery_level_sensor
+              solar_forecast_sensor: !input solar_forecast_sensor
+              solar_good_threshold: !input solar_good_threshold
+              max_soc_sun_high: !input max_soc_sun_high
+              solar_medium_threshold: !input solar_medium_threshold
+              max_soc_sun_medium: !input max_soc_sun_medium
+              max_soc_sun_low: !input max_soc_sun_low
               
               pmax: "{{ (puissance_max_kva | int) * 1000 }}"
               conso: "{{ states(home_power_sensor) | float(0) }}"
