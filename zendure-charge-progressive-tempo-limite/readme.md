@@ -2,7 +2,7 @@
 
 # **Zendure – Charge Progressive Solaire + Tempo + Limitation Puissance (Version Simplifiée)**
 
-Ce blueprint Home Assistant permet de **gérer intelligemment la charge d’une batterie Zendure** (SolarFlow / SuperBase / AB2000X / AB3000X…), en se basant sur :
+Ce blueprint Home Assistant permet de **gérer intelligemment la charge d’une batterie Zendure** (SolarFlow / Hyper / AB2000X / AB3000X…), en se basant sur :
 
 *   la **couleur Tempo du lendemain** (Bleu / Blanc / Rouge)
 *   la **prévision solaire du lendemain** (faible / moyen / fort)
@@ -18,8 +18,9 @@ Ce blueprint Home Assistant permet de **gérer intelligemment la charge d’une 
 ## ⚠️ Important — À lire impérativement
 
 ### **➡️ Le HEMS doit être désactivé dans l’application Zendure**
+### **➡️ Le groupe de fusible de l'appariel dans l'intégration ZENDURE doit être renseigné**
 
-Sinon, le SolarFlow ou la SuperBase **ignore Home Assistant**.  
+Sinon, le SolarFlow ou le Hyper **ignore Home Assistant**.  
 Le contrôle serait alors instable ou impossible.
 
 ---
@@ -56,7 +57,7 @@ Vous choisissez :
 | ----------------- | ----------------------------- | ------- | ------- |
 | Soleil fort       | Beaucoup de production demain | Bas     | 40%     |
 | Soleil moyen      | Production intermédiaire      | Moyen   | 70%     |
-| Soleil faible     | Très peu de production        | Haut    | 90–100% |
+| Soleil faible     | Très peu de production        | Haut    | 90%     |
 
 👉 Le blueprint arrête **automatiquement** la charge quand ce SOC est atteint.
 
@@ -67,7 +68,7 @@ Elle est automatiquement **limitée** par :
 
     marge_dispo = puissance_contrat_W - puissance_maison
 
-La charge s’adapte seule sans jamais dépasser la puissance EDF.
+La charge s’adapte seule sans jamais dépasser la puissance de l'abonnement (ex: 9kVA).
 
 ### ✔ Mode AC automatique
 
@@ -108,7 +109,7 @@ Se relance automatiquement sur :
 | `battery_level_sensor`  | Niveau de batterie (%)           |
 | `solar_forecast_sensor` | Prévision solaire (kWh)          |
 | `home_power_sensor`     | Puissance instantanée maison (W) |
-| `puissance_max_kva`     | Puissance contrat EDF (3–36 kVA) |
+| `puissance_max_kva`     | Puissance contrat     (3–36 kVA) |
 
 ### **Contrôle Zendure :**
 
@@ -162,7 +163,7 @@ Si :
 
     battery_level_sensor >= max_soc
 
-→ AC = off  
+→ AC = output  
 → Zendure manager = off  
 → Aucune relance
 
@@ -178,7 +179,7 @@ Si :
 
 ***
 
-### 5️⃣ Limitation puissance EDF
+### 5️⃣ Limitation puissance contrat
 
     puissance_max_w = kVA * 1000
     marge_dispo = puissance_max_w - puissance_maison
@@ -220,6 +221,10 @@ Si :
 *   Les modes intelligents Zendure **ne doivent pas être actifs**
 *   Une variation brutale de consommation peut entraîner des recalculs fréquents
 *   Si le SolarFlow est en veille ou en erreur, HA ne peut pas forcer le mode input
+
+***
+
+Doit être combiné avec le : **[ZENDURE - Mode SMART en journée](https://github.com/zarzak12/homeassistant-blueprints/blob/1.0.0/zendure_mode_excedent_journee)**
 
 ***
 
