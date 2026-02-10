@@ -35,7 +35,7 @@ Par défaut configuré pour le **mode smart/excédent solaire** en journée, il 
 2. Cliquez sur **Importer un Blueprint**
 3. Collez l'URL suivante :
 ```
-https://github.com/antoineguilbert/homeassistant-blueprints/blob/main/zendure-mode-excedent-journee/zendure_mode_excedent_journee.yaml
+https://github.com/zarzak12/homeassistant-blueprints/edit/1.0.0/zendure_mode_excedent_journee/zendure_mode_excedent_journee.yaml
 ```
 4. Cliquez sur **Aperçu** puis **Importer**
 

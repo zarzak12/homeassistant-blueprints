@@ -1,12 +1,18 @@
 blueprint:
-  name: Zendure - Charge Progressive Tempo + Solaire + Limitation puissance maison
+  name: Zendure - Charge Progressive (simplifié) Tempo + Solaire + Limitation puissance maison
   description: >
-    Charge progressive de la batterie Zendure en Heures Creuses
-    selon le niveau de batterie, la couleur Tempo, la prévision solaire
-    et la puissance max disponible dans la maison.
+    Charge simplifiée de la batterie Zendure :
+    - 1 seul seuil de puissance,
+    - SOC maximal selon prévision solaire (faible/moyen/fort),
+    - limitation par couleur Tempo,
+    - limitation par puissance maison,
+    - fenêtre horaire (début → fin),
+    - décision dynamique et sécurisée.
   domain: automation
 
   input:
+    # CAPTEUR
+    #--- TEMPO ---
     tempo_sensor:
       name: Capteur Tempo
       description: Couleur Tempo du lendemain (Bleu / Blanc / Rouge)
@@ -14,132 +20,138 @@ blueprint:
         entity:
           domain: sensor
 
+    #--- BATTERIE ---
     battery_level_sensor:
-      name: Niveau de batterie
+      name: Niveau de batterie (%)
       description: Niveau de charge de la batterie (%)
       selector:
         entity:
           domain: sensor
 
-    solar_forecast_sensor:
-      name: Prévision solaire demain
-      description: Énergie solaire prévue demain (kWh)
-      selector:
-        entity:
-          domain: sensor
-
+    #--- ENTITÉS ZENDURE ---
     zendure_manager:
       name: Zendure Manager
-      description: Entité de contrôle du Zendure Manager
       selector:
         entity:
           domain: select
 
     input_limit:
-      name: Limite d'entrée
-      description: Entité pour définir la puissance de charge réseau
+      name: Limite d'entrée (W)
       selector:
         entity:
           domain: number
 
     ac_mode:
       name: Mode AC
-      description: Entité pour définir le mode AC
       selector:
         entity:
           domain: select
 
-    charge_time:
-      name: Heure de déclenchement
-      default: "22:00:00"
+    #--- SOLEIL ---
+    solar_forecast_sensor:
+      name: Prévision solaire demain (kWh)
       selector:
         time:
 
-    low_battery_threshold:
-      name: Seuil batterie faible
+    # Définition variables
+    allow_tempo_bleu:
+      name: Autoriser charge en jour Bleu
+      default: false
+      selector:
+        boolean:
+
+    allow_tempo_blanc:
+      name: Autoriser charge en jour Blanc
+      default: true
+      selector:
+        boolean:
+
+    allow_tempo_rouge:
+      name: Autoriser charge en jour Rouge
+      default: true
+      selector:
+        boolean:
+
+    #--- SEUIL SOC SELON PRÉVISION SOLAIRE ---
+    max_soc_sun_low:
+      name: Niveau max si faible soleil (%)
+      default: 95
+      selector:
+        number:
+          min: 0
+          max: 100
+
+    max_soc_sun_medium:
+      name: Niveau max si soleil moyen (%)
+      default: 50
+      selector:
+        number:
+          min: 0
+          max: 100
+
+    max_soc_sun_high:
+      name: Niveau max si fort soleil (%)
       default: 30
       selector:
         number:
           min: 0
           max: 100
-          unit_of_measurement: "%"
 
-    medium_battery_threshold:
-      name: Seuil batterie moyenne
-      default: 60
+    #--- PUISSANCE EDF ---
+    puissance_max_kva:
+      name: Puissance contrat (kVA)
+      default: 7
       selector:
         number:
-          min: 0
-          max: 100
-          unit_of_measurement: "%"
+          min: 3
+          max: 36
+          step: 1
 
+    #--- FENÊTRE TEMPORELLE ---
+    charge_time:
+      name: Heure de début
+      default: "22:00:00"
+      selector:
+        time:
+
+    end_charge_time:
+      name: Heure de fin
+      default: "06:00:00"
+      selector:
+        time:
+
+    #--- SEUILS SOLEIL ---
     solar_medium_threshold:
-      name: Seuil solaire moyen
-      description: Au-dessus de ce seuil, charge réseau réduite (kWh)
+      name: Seuil solaire moyen (kWh)
       default: 3.5
       selector:
         number:
           min: 0
           max: 50
           step: 0.1
-          unit_of_measurement: "kWh"
 
     solar_good_threshold:
-      name: Seuil solaire élevé
-      description: Au-dessus de ce seuil, pas de charge réseau (kWh)
+      name: Seuil solaire élevé (kWh)
       default: 7
       selector:
         number:
           min: 0
           max: 50
           step: 0.1
-          unit_of_measurement: "kWh"
 
-    high_power_limit:
-      name: Puissance charge rapide
-      default: 1700
-      selector:
-        number:
-          min: 0
-          max: 2400
-          unit_of_measurement: "W"
-
-    medium_power_limit:
-      name: Puissance charge normale
+    #--- PUISSANCE CHARGE ---
+    charge_power_limit:
+      name: Puissance unique de charge (W)
       default: 1200
       selector:
         number:
           min: 0
           max: 2400
-          unit_of_measurement: "W"
+          step: 50
 
-    low_power_limit:
-      name: Puissance charge douce
-      default: 600
-      selector:
-        number:
-          min: 0
-          max: 2400
-          unit_of_measurement: "W"
-
-    puissance_max_kva:
-      name: Puissance contrat (kVA)
-      description: Puissance maximale disponible, convertie automatiquement en W
-      default: 9
-      selector:
-        number:
-          min: 3
-          max: 36
-          step: 1
-          unit_of_measurement: "kVA"
-
-    home_power_sensor:
-      name: Puissance instantanée maison (W)
-      description: Consommation actuelle du foyer
-      selector:
-        entity:
-          domain: sensor
-
+#──────────────────────────────
+#           TRIGGERS
+#──────────────────────────────
 trigger:
   - platform: time
     at: !input charge_time
@@ -147,6 +159,7 @@ trigger:
   
   - platform: state
     entity_id: !input home_power_sensor
+    id: power_change
 
 condition:
   - condition: or
@@ -158,113 +171,146 @@ condition:
         entity_id: !input tempo_sensor
         state: "Rouge"
 
+#──────────────────────────────
+#           ACTIONS
+#──────────────────────────────
 action:
-  # Sécurité : on coupe avant décision
-  - action: select.select_option
-    target:
-      entity_id: !input zendure_manager
-    data:
-      option: "off"
 
-  # Calcul marge puissance disponible
+  # NORMALISATION TEMPO
   - variables:
-      puissance_max_kva: !input puissance_max_kva
-      home_power_sensor: !input home_power_sensor
-      puissance_max_w: "{{ (puissance_max_kva | int(6)) * 1000 }}"
-      conso_maison: "{{ states(home_power_sensor) | float(0) }}"
-      marge_dispo: "{{ puissance_max_w - conso_maison }}"
+      tempo_sensor: !input tempo_sensor
+      tempo_raw: "{{ states(tempo_sensor) | default('', true) }}"
+      tempo_clean: >
+        {% set t = tempo_raw | lower %}
+        {% if 'bleu' in t %}bleu
+        {% elif 'blanc' in t %}blanc
+        {% elif 'rouge' in t %}rouge
+        {% else %}inconnu{% endif %}
 
+      allow_bleu: !input allow_tempo_bleu
+      allow_blanc: !input allow_tempo_blanc
+      allow_rouge: !input allow_tempo_rouge
+
+      tempo_allowed: >
+        {{ (tempo_clean == 'bleu' and allow_bleu)
+           or (tempo_clean == 'blanc' and allow_blanc)
+           or (tempo_clean == 'rouge' and allow_rouge) }}
+
+
+  # ❌ STOP SI TEMPO NON AUTORISÉ
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ not tempo_allowed }}"
+        sequence:
+          - stop: "Jour Tempo non autorisé – arrêt de la charge."
+
+
+  # FENÊTRE HORAIRE : STOP À LA FIN
   - choose:
       # ☀️ Soleil élevé → pas de charge réseau
       - conditions:
-          - condition: numeric_state
-            entity_id: !input solar_forecast_sensor
-            above: !input solar_good_threshold
+          - condition: or
+            conditions:
+              - condition: trigger
+                id: start_charge
+              - condition: time
+                after: !input charge_time
+                before: !input end_charge_time
         sequence:
+
+          # SÉCURITÉ : ON OFF AVANT DÉCISION
           - action: select.select_option
             target:
               entity_id: !input zendure_manager
             data:
               option: "off"
 
-      # 🌤️ Soleil moyen → charge douce
-      - conditions:
-          - condition: numeric_state
-            entity_id: !input solar_forecast_sensor
-            above: !input solar_medium_threshold
-            below: !input solar_good_threshold
-        sequence:
+          # VARIABLES ÉNERGIE
           - variables:
-              puissance_voulue: !input low_power_limit
-              puissance_effective: "{{ [puissance_voulue, marge_dispo] | min }}"
-          - action: number.set_value
-            data:
-              value: "{{ puissance_effective }}"
-            target:
-              entity_id: !input input_limit
-          - action: select.select_option
-            data:
-              option: "input"
-            target:
-              entity_id: !input ac_mode
+              puissance_max_kva: !input puissance_max_kva
+              home_power_sensor: !input home_power_sensor
+              battery_level_sensor: !input battery_level_sensor
+              solar_forecast_sensor: !input solar_forecast_sensor
+              solar_good_threshold: !input solar_good_threshold
+              max_soc_sun_high: !input max_soc_sun_high
+              solar_medium_threshold: !input solar_medium_threshold
+              max_soc_sun_medium: !input max_soc_sun_medium
+              max_soc_sun_low: !input max_soc_sun_low
+              
+              pmax: "{{ (puissance_max_kva | int) * 1000 }}"
+              conso: "{{ states(home_power_sensor) | float(0) }}"
+              marge: "{{ pmax - conso }}"
+              soc_actuel: "{{ states(battery_level_sensor) | float(0) }}"
+              sun: "{{ states(solar_forecast_sensor) | float(0) }}"
 
-      # 🌧️ Peu de soleil → charge selon batterie
-      - conditions:
-          - condition: numeric_state
-            entity_id: !input solar_forecast_sensor
-            below: !input solar_medium_threshold
-        sequence:
+              max_soc: >
+                {% if sun >= solar_good_threshold %}
+                  {{ max_soc_sun_high }}
+                {% elif sun >= solar_medium_threshold %}
+                  {{ max_soc_sun_medium }}
+                {% else %}
+                  {{ max_soc_sun_low }}
+                {% endif %}
+
+          # STOP SI SOC ⩾ SOC MAX
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ soc_actuel >= max_soc }}"
+                sequence:
+                  - action: select.select_option
+                    target: { entity_id: !input zendure_manager }
+                    data: { option: "off" }
+                  - action: select.select_option
+                    target: { entity_id: !input ac_mode }
+                    data: { option: "output" }
+                  - stop: "Seuil SOC atteint."
+
+          # LOGIQUE SOLAIRE
           - choose:
 
-              # Batterie faible → puissance haute
+              # ☀ Soleil fort → pas de charge
               - conditions:
                   - condition: numeric_state
-                    entity_id: !input battery_level_sensor
-                    below: !input low_battery_threshold
+                    entity_id: !input solar_forecast_sensor
+                    above: !input solar_good_threshold
                 sequence:
-                  - variables:
-                      puissance_voulue: !input high_power_limit
-                      puissance_effective: "{{ [puissance_voulue, marge_dispo] | min }}"
-                  - action: number.set_value
-                    data:
-                      value: "{{ puissance_effective }}"
-                    target:
-                      entity_id: !input input_limit
+                  - action: select.select_option
+                    target: { entity_id: !input zendure_manager }
+                    data: { option: "off" }
 
-              # Batterie moyenne → puissance médium
+              # 🌤 Soleil moyen → charge
               - conditions:
                   - condition: numeric_state
-                    entity_id: !input battery_level_sensor
-                    below: !input medium_battery_threshold
+                    entity_id: !input solar_forecast_sensor
+                    above: !input solar_medium_threshold
+                    below: !input solar_good_threshold
                 sequence:
                   - variables:
-                      puissance_voulue: !input medium_power_limit
-                      puissance_effective: "{{ [puissance_voulue, marge_dispo] | min }}"
+                      wanted: !input charge_power_limit
+                      effective: "{{ [wanted, marge] | min | max(0) }}"
                   - action: number.set_value
-                    data:
-                      value: "{{ puissance_effective }}"
-                    target:
-                      entity_id: !input input_limit
+                    target: { entity_id: !input input_limit }
+                    data: { value: "{{ effective }}" }
+                  - action: select.select_option
+                    target: { entity_id: !input ac_mode }
+                    data: { option: "input" }
 
-              # Batterie bonne → charge douce
+              # 🌧 Soleil faible → charge
               - conditions:
                   - condition: numeric_state
-                    entity_id: !input battery_level_sensor
-                    above: !input medium_battery_threshold
+                    entity_id: !input solar_forecast_sensor
+                    below: !input solar_medium_threshold
                 sequence:
                   - variables:
-                      puissance_voulue: !input low_power_limit
-                      puissance_effective: "{{ [puissance_voulue, marge_dispo] | min }}"
+                      wanted: !input charge_power_limit
+                      effective: "{{ [wanted, marge] | min | max(0) }}"
                   - action: number.set_value
-                    data:
-                      value: "{{ puissance_effective }}"
-                    target:
-                      entity_id: !input input_limit
-
-          - action: select.select_option
-            data:
-              option: "input"
-            target:
-              entity_id: !input ac_mode
+                    target: { entity_id: !input input_limit }
+                    data: { value: "{{ effective }}" }
+                  - action: select.select_option
+                    target: { entity_id: !input ac_mode }
+                    data: { option: "input" }
 
 mode: single
