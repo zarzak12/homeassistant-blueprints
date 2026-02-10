@@ -51,15 +51,7 @@ blueprint:
     solar_forecast_sensor:
       name: Prévision solaire demain (kWh)
       selector:
-        entity:
-          domain: sensor
-
-    #--- PUISSANCE MAISON ---
-    home_power_sensor:
-      name: Puissance instantanée maison (W)
-      selector:
-        entity:
-          domain: sensor
+        time:
 
     # Définition variables
     allow_tempo_bleu:
@@ -164,16 +156,20 @@ trigger:
   - platform: time
     at: !input charge_time
     id: start_charge
-
-  - platform: time
-    at: !input end_charge_time
-    id: end_charge
-
+  
   - platform: state
     entity_id: !input home_power_sensor
     id: power_change
 
-condition: []
+condition:
+  - condition: or
+    conditions:
+      - condition: state
+        entity_id: !input tempo_sensor
+        state: "Blanc"
+      - condition: state
+        entity_id: !input tempo_sensor
+        state: "Rouge"
 
 #──────────────────────────────
 #           ACTIONS
@@ -212,21 +208,7 @@ action:
 
   # FENÊTRE HORAIRE : STOP À LA FIN
   - choose:
-      - conditions:
-          - condition: trigger
-            id: end_charge
-        sequence:
-          - action: select.select_option
-            target: { entity_id: !input zendure_manager }
-            data: { option: "off" }
-          - action: select.select_option
-            target: { entity_id: !input ac_mode }
-            data: { option: "output" }
-          - stop: "Fin de fenêtre horaire – arrêt complet."
-
-
-  # FENÊTRE HORAIRE ACTIVE
-  - choose:
+      # ☀️ Soleil élevé → pas de charge réseau
       - conditions:
           - condition: or
             conditions:
