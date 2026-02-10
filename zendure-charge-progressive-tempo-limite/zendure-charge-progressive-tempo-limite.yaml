@@ -221,7 +221,7 @@ action:
             data: { option: "off" }
           - action: select.select_option
             target: { entity_id: !input ac_mode }
-            data: { option: "off" }
+            data: { option: "output" }
           - stop: "Fin de fenêtre horaire – arrêt complet."
 
 
@@ -282,7 +282,7 @@ action:
                     data: { option: "off" }
                   - action: select.select_option
                     target: { entity_id: !input ac_mode }
-                    data: { option: "off" }
+                    data: { option: "output" }
                   - stop: "Seuil SOC atteint."
 
           # LOGIQUE SOLAIRE
