@@ -22,7 +22,23 @@ Ce blueprint Home Assistant permet de **gérer intelligemment la charge d’une 
 Sinon, le SolarFlow ou la SuperBase **ignore Home Assistant**.  
 Le contrôle serait alors instable ou impossible.
 
-***
+---
+
+## Prérequis
+
+### Intégrations requises
+
+- **[Zendure Home Assistant](https://github.com/Zendure/Zendure-HA)**  
+  Gestion de la batterie Zendure (SolarFlow, Hyper, etc.)
+
+- **[RTE Tempo](https://github.com/hekmon/rtetempo)**  
+  Récupération de la couleur Tempo (Bleu / Blanc / Rouge)
+
+- **Forecast Solar**  
+  Fournit la production solaire estimée (kWh) pour le lendemain  
+  👉 Capteur typique : `sensor.energy_production_tomorrow`
+
+---
 
 # 📑 Fonctionnalités
 
