@@ -1,57 +1,71 @@
-***
-
 # 📘 README.md — Blueprint Home Assistant
 
-# **Zendure – Charge Progressive Tempo + Solaire + Limitation Puissance**
+# **Zendure – Charge Progressive Solaire + Tempo + Limitation Puissance (Version Simplifiée)**
 
-Ce blueprint Home Assistant permet de **gérer intelligemment la charge d’une batterie Zendure** (ou tout système compatible via Zendure Manager) en combinant :
+Ce blueprint Home Assistant permet de **gérer intelligemment la charge d’une batterie Zendure** (SolarFlow / SuperBase / AB2000X / AB3000X…), en se basant sur :
 
-*   la **couleur Tempo du lendemain** (Blanc / Rouge)
-*   la **prévision solaire du lendemain**
-*   le **niveau de batterie**
+*   la **couleur Tempo du lendemain** (Bleu / Blanc / Rouge)
+*   la **prévision solaire du lendemain** (faible / moyen / fort)
 *   la **puissance instantanée consommée par la maison**
-*   la **puissance maximale du contrat électrique** (3 à 36 kVA)
+*   la **puissance maximale souscrite (kVA)**
+*   un **seuil unique de puissance de charge**
+*   un **SOC maximal ajusté automatiquement selon la météo solaire**
 
-*   **Avant toute chose il faudra désactiver le HEMS, sinon le pilotage, via Home Assistant, ne fonctionnera pas**
+👉 Ce blueprint est **simple**, **prévisible**, **optimisé pour l’autoconsommation**, tout en protégeant votre installation électrique.
 
-Grâce à ces données, la puissance de charge est ajustée dynamiquement pour **optimiser la consommation**, **éviter les dépassements**, et **maximiser l’utilisation de l’énergie solaire**.
+***
+
+## ⚠️ Important — À lire impérativement
+
+### **➡️ Le HEMS doit être désactivé dans l’application Zendure**
+
+Sinon, le SolarFlow ou la SuperBase **ignore Home Assistant**.  
+Le contrôle serait alors instable ou impossible.
 
 ***
 
 # 📑 Fonctionnalités
 
-### ✔ Charge intelligente basée sur :
+### ✔ Couleur Tempo utilisée pour autoriser la charge
 
-*   Couleur Tempo du lendemain (aucune charge en Bleu)
-*   Prévision solaire (aucune charge si production élevée)
-*   Niveau de batterie (faible/moyen/haut → charge rapide/normale/douce)
+Vous choisissez :
 
-### ✔ Limitation automatique en fonction de la puissance disponible
+*   charger ou non en **Bleu**
+*   charger ou non en **Blanc**
+*   charger ou non en **Rouge**
 
-Le blueprint calcule en continu :
+### ✔ Calcul automatique du SOC maximal selon la prévision solaire
 
-    marge_dispo = puissance_max_contrat_watts - puissance_maison
+| Prévision solaire | Interprétation                | SOC max | Exemple |
+| ----------------- | ----------------------------- | ------- | ------- |
+| Soleil fort       | Beaucoup de production demain | Bas     | 40%     |
+| Soleil moyen      | Production intermédiaire      | Moyen   | 70%     |
+| Soleil faible     | Très peu de production        | Haut    | 90–100% |
 
-La puissance de charge est automatiquement ajustée pour **ne jamais** dépasser la puissance souscrite.
+👉 Le blueprint arrête **automatiquement** la charge quand ce SOC est atteint.
 
-### ✔ Mode AC configuré automatiquement
+### ✔ Puissance de charge **unique**
 
-Basculé en mode « input » lorsque la charge réseau est activée.
+Vous définissez UNE puissance (ex : 1200 W).  
+Elle est automatiquement **limitée** par :
 
-### ✔ Recalcul périodique
+    marge_dispo = puissance_contrat_W - puissance_maison
 
-Le comportement peut être recalculé via :
+La charge s’adapte seule sans jamais dépasser la puissance EDF.
 
-*   une planification (toutes les X minutes)
-*   un changement de la consommation maison
-*   les mises à jour des capteurs
+### ✔ Mode AC automatique
 
-### ✔ Compatible avec :
+Le blueprint bascule automatiquement en :
 
-*   Zendure SuperBase
-*   Zendure Manager (intégration Home Assistant)
-*   Capteurs Linky / Suivi de consommation
-*   Prévisions solaires (Solar Forecast, Tomorrow\.io, etc.)
+*   **input** → si la charge est active
+*   **off** → si charge interdite / SOC max atteint / soleil fort
+
+### ✔ Recalcul dynamique
+
+Se relance automatiquement sur :
+
+*   l'heure de départ
+*   changement de puissance maison
 
 ***
 
@@ -59,153 +73,147 @@ Le comportement peut être recalculé via :
 
 [![Importer dans Home Assistant](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fzarzak12%2Fhomeassistant-blueprints%2Fblob%2F7023bdc64726c464a144894bd5cc2477571ccb0c%2Fzendure-charge-progressive-tempo-limite%2Fzendure-charge-progressive-tempo-limite.yaml)
 
-1.  Copier le fichier `blueprint.yaml` dans :
+1.  Copier le fichier `.yaml` dans :
         config/blueprints/automation/
-2.  Redémarrer Home Assistant ou recharger les blueprints.
-3.  Dans *Automatisations*, cliquer sur **Créer depuis un blueprint**.
+2.  Recharger les blueprints ou redémarrer Home Assistant
+3.  Créer une nouvelle automatisation
 4.  Sélectionner :  
-    **Zendure – Charge Progressive Tempo + Solaire + Limitation Puissance**
+    **Zendure – Charge Progressive Solaire + Tempo + Limitation Puissance**
 
 ***
 
 # ⚙️ Configuration des Inputs
 
-Voici les entités à fournir :
+### **Capteurs nécessaires :**
 
-| Input                   | Description                                   |
-| ----------------------- | --------------------------------------------- |
-| `tempo_sensor`          | Couleur Tempo du lendemain                    |
-| `battery_level_sensor`  | Niveau actuel de la batterie (%)              |
-| `solar_forecast_sensor` | Prévision solaire du lendemain (kWh)          |
-| `zendure_manager`       | Entité de contrôle du Zendure Manager         |
-| `input_limit`           | Puissance de charge (W)                       |
-| `ac_mode`               | Sélecteur du mode AC                          |
-| `charge_time`           | Heure de déclenchement initial                |
-| `home_power_sensor`     | Puissance instantanée consommée par la maison |
-| `puissance_max_kva`     | Puissance souscrite (3 à 36 kVA)              |
+| Input                   | Description                      |
+| ----------------------- | -------------------------------- |
+| `tempo_sensor`          | Couleur Tempo du lendemain       |
+| `battery_level_sensor`  | Niveau de batterie (%)           |
+| `solar_forecast_sensor` | Prévision solaire (kWh)          |
+| `home_power_sensor`     | Puissance instantanée maison (W) |
+| `puissance_max_kva`     | Puissance contrat EDF (3–36 kVA) |
 
-### Seuils configurables :
+### **Contrôle Zendure :**
 
-*   Niveau batterie faible / moyen
-*   Seuil solaire faible / moyen / élevé
-*   Puissance charge douce / normale / forte
+| Input             | Description                      |
+| ----------------- | -------------------------------- |
+| `zendure_manager` | Select du Zendure Manager        |
+| `input_limit`     | Limite de puissance d’entrée (W) |
+| `ac_mode`         | Sélecteur AC (input / off)       |
+| `charge_time`     | Heure de démarrage               |
+
+### **Paramètres de charge :**
+
+| Input                | Description                    |
+| -------------------- | ------------------------------ |
+| `charge_power_limit` | Puissance unique de charge (W) |
+| `max_soc_sun_low`    | SOC max si faible soleil       |
+| `max_soc_sun_medium` | SOC max si soleil moyen        |
+| `max_soc_sun_high`   | SOC max si soleil fort         |
+
+### **Autorisation Tempo :**
+
+| Input               | Description                  |
+| ------------------- | ---------------------------- |
+| `allow_tempo_bleu`  | Autoriser la charge en Bleu  |
+| `allow_tempo_blanc` | Autoriser la charge en Blanc |
+| `allow_tempo_rouge` | Autoriser la charge en Rouge |
 
 ***
 
 # 🔍 Fonctionnement détaillé
 
-### 🟦 1. Vérification Tempo
+### 1️⃣ Vérification Tempo
 
-Si **Bleu → pas de charge**  
-Si **Blanc/Rouge → charge potentielle**
-
-***
-
-### ☀️ 2. Analyse des prévisions solaires
-
-*   Soleil élevé → **charge réseau coupée**
-*   Soleil moyen → **charge douce**
-*   Peu de soleil → priorité au **niveau batterie**
+Si la couleur Tempo n’est pas cochée → **aucune charge**, quelle que soit la météo.
 
 ***
 
-### 🔋 3. Analyse du niveau de batterie
+### 2️⃣ Analyse de la prévision solaire
 
-| Niveau batterie | Mode choisi    |
-| --------------- | -------------- |
-| < seuil bas     | Charge rapide  |
-| < seuil moyen   | Charge normale |
-| > seuil moyen   | Charge douce   |
+Détermine le **SOC maximal** :
+
+    faible soleil  → max_soc_sun_low
+    moyen soleil   → max_soc_sun_medium
+    fort soleil    → max_soc_sun_high
 
 ***
 
-### ⚡ 4. Limitation automatique de la puissance
+### 3️⃣ Stop automatique sur SOC maximal
 
-Avant toute charge, le blueprint calcule :
+Si :
+
+    battery_level_sensor >= max_soc
+
+→ AC = off  
+→ Zendure manager = off  
+→ Aucune relance
+
+***
+
+### 4️⃣ Gestion solaire
+
+| Soleil | Action                    |
+| ------ | ------------------------- |
+| Fort   | Pas de charge             |
+| Moyen  | Charge (puissance unique) |
+| Faible | Charge (puissance unique) |
+
+***
+
+### 5️⃣ Limitation puissance EDF
 
     puissance_max_w = kVA * 1000
     marge_dispo = puissance_max_w - puissance_maison
+    puissance_effective = min(charge_power_limit, marge_dispo)
 
-Puis :
+## Ce qui signifie :
 
-    puissance_effective = min(puissance_voulue, marge_dispo)
-
-La charge est réduite automatiquement en cas de forte consommation :
-
-*   Spa / ballon ECS
-*   Four / plaques
-*   Chauffage électrique
-*   Pompes / compresseurs, etc.
+*   Si la maison consomme beaucoup → charge réduite automatiquement
+*   Si marge insuffisante → charge = 0
+*   Aucun risque de disjonction
 
 ***
 
-# 🧪 Exemples de comportement
+# 🧪 Exemples d’usage
 
-### 🔋 Exemple 1 — Batterie faible, peu de soleil, maison peu chargée
+### ☀️ Exemple 1 — Fort soleil demain
 
-→ Charge rapide à 1700 W
+→ SOC max = 40%  
+→ Charge courte uniquement si Tempo autorisée
 
-### ☀️ Exemple 2 — Soleil fort prévu
+### 🌤 Exemple 2 — Soleil moyen
 
-→ Charge réseau coupée
+→ SOC max = 70%  
+→ Charge à puissance fixe mais limitée par marge
 
-### ⚡ Exemple 3 — Maison consomme presque tout
+### ☁️ Exemple 3 — Très mauvais temps
 
-→ Charge réduite à 200 W
+→ SOC max = 95%  
+→ Charge plus longue pour anticiper faible production
 
-### 🏡 Exemple 4 — Maison dépasse la puissance max
+### ⚡ Exemple 4 — Maison très énergivore
 
-→ Charge réglée à 0 W pour ne pas aggraver le dépassement
-
-### 🌤️ Exemple 5 — Soleil moyen, marge faible
-
-→ Charge douce limitée à la marge disponible
-
-***
-
-# 🔧 Conseils d’utilisation
-
-*   Utiliser un capteur **Linky** ou équivalent pour `home_power_sensor`
-*   Définir correctement `puissance_max_kva` selon votre contrat EDF
-*   Ajouter un déclencheur périodique pour recalcul automatique :
-    ```yaml
-    trigger:
-      - platform: time_pattern
-        minutes: "/2"
-    ```
-*   Vous pouvez aussi déclencher sur changement de consommation :
-    ```yaml
-    - platform: state
-      entity_id: !input home_power_sensor
-    ```
+→ Charge automatiquement réduite (ex : marge 350 W → charge 350 W)
 
 ***
 
-# 🧱 Limites connues
+# 🧱 Limites
 
-*   Si des appareils créent de très fortes variations instantanées, vous pouvez ajouter un **hystérésis** pour stabiliser la charge.
-*   Le Zendure peut avoir un temps de réaction de quelques secondes.
+*   Les modes intelligents Zendure **ne doivent pas être actifs**
+*   Une variation brutale de consommation peut entraîner des recalculs fréquents
+*   Si le SolarFlow est en veille ou en erreur, HA ne peut pas forcer le mode input
 
 ***
 
-# 🛠️ Contribution
+# 🛠 Contribution
 
-Les contributions sont bienvenues :  
-Nouvelles fonctionnalités, optimisations, idées, documentation, etc.
-
-Vous pouvez :
-
-*   créer une *issue*
-*   proposer une *pull request*
-*   discuter d’améliorations
+Toute contribution est bienvenue :  
+amélioration du code, documentation, optimisation énergétique…
 
 ***
 
 # 📄 Licence
 
-Ce blueprint est publié sous licence **MIT**.  
-Vous êtes libre de le modifier, adapter, redistribuer.
-
-***
-
-Tu veux une version plus visuelle ? Une mise en page GitHub stylée ?
+Licence **MIT** — libre adaptation et redistribution.
