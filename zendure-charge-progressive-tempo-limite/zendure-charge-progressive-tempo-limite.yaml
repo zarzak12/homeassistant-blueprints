@@ -179,9 +179,9 @@ action:
         {% elif 'rouge' in t %}rouge
         {% else %}inconnu{% endif %}
 
-      allow_bleu: !inputs allow_tempo_bleu
-      allow_blanc: !inputs allow_tempo_blanc
-      allow_rouge: !inputs allow_tempo_rouge
+      allow_bleu: !input allow_tempo_bleu
+      allow_blanc: !input allow_tempo_blanc
+      allow_rouge: !input allow_tempo_rouge
 
       tempo_allowed: >
         {{ (tempo_clean == 'bleu' and allow_bleu)
