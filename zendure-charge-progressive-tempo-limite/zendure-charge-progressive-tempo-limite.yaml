@@ -173,6 +173,9 @@ condition:
     conditions:
       - condition: state
         entity_id: !input tempo_sensor
+        state: "Bleu"
+      - condition: state
+        entity_id: !input tempo_sensor
         state: "Blanc"
       - condition: state
         entity_id: !input tempo_sensor
