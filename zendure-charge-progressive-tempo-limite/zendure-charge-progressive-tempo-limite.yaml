@@ -57,7 +57,7 @@ blueprint:
     solar_forecast_sensor:
       name: Prévision solaire demain (kWh)
       selector:
-        time:
+        domain: sensor
 
     # Définition variables
     allow_tempo_bleu:
