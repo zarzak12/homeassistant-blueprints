@@ -12,6 +12,12 @@ blueprint:
 
   input:
     # CAPTEUR
+    home_power_sensor:
+      name: Compteur energie
+      description: Puissance consomme en temps reel 
+      selector:
+        entity:
+          domain: sensor
     #--- TEMPO ---
     tempo_sensor:
       name: Capteur Tempo
