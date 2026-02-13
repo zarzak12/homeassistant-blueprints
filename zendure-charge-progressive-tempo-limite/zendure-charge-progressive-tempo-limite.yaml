@@ -289,7 +289,10 @@ action:
                 sequence:
                   - variables:
                       wanted: !input charge_power_limit
-                      effective: "{{ [wanted, marge] | min | max(0) }}"
+                      effective: >
+                        {% set m = marge | float(0) %}
+                        {% set w = wanted %}
+                        {{ [w, m] | min | max(0) }}
                   - action: number.set_value
                     target: { entity_id: !input input_limit }
                     data: { value: "{{ effective }}" }
@@ -305,7 +308,10 @@ action:
                 sequence:
                   - variables:
                       wanted: !input charge_power_limit
-                      effective: "{{ [wanted, marge] | min | max(0) }}"
+                      effective: >
+                        {% set m = marge | float(0) %}
+                        {% set w = wanted %}
+                        {{ [w, m] | min | max(0) }}
                   - action: number.set_value
                     target: { entity_id: !input input_limit }
                     data: { value: "{{ effective }}" }
