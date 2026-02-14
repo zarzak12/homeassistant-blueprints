@@ -303,11 +303,11 @@ action:
                     below: !input solar_good_threshold
                 sequence:
                   - variables:
-                      wanted: !input charge_power_limit
-                      effective: '{{ [wanted, marge | float(0)] | min | max(0) }}'
+                      puissance_voulue: !input low_power_limit
+                      puissance_effective: "{{ [[puissance_voulue, marge_dispo] | min, 0] | max }}"
                   - action: number.set_value
                     target: { entity_id: !input input_limit }
-                    data: { value: "{{ effective }}" }
+                    data: { value: "{{ puissance_effective }}" }
                   - action: select.select_option
                     target: { entity_id: !input ac_mode }
                     data: { option: "input" }
@@ -319,11 +319,11 @@ action:
                     below: !input solar_medium_threshold
                 sequence:
                   - variables:
-                      wanted: !input charge_power_limit
-                      effective: '{{ [wanted, marge | float(0)] | min | max(0) }}'
+                      puissance_voulue: !input low_power_limit
+                      puissance_effective: "{{ [[puissance_voulue, marge_dispo] | min, 0] | max }}"
                   - action: number.set_value
                     target: { entity_id: !input input_limit }
-                    data: { value: "{{ effective }}" }
+                    data: { value: "{{ puissance_effective }}" }
                   - action: select.select_option
                     target: { entity_id: !input ac_mode }
                     data: { option: "input" }
