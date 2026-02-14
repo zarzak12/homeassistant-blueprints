@@ -303,7 +303,7 @@ action:
                     below: !input solar_good_threshold
                 sequence:
                   - variables:
-                      puissance_voulue: !input low_power_limit
+                      puissance_voulue: !input charge_power_limit
                       puissance_effective: "{{ [[puissance_voulue, marge_dispo] | min, 0] | max }}"
                   - action: number.set_value
                     target: { entity_id: !input input_limit }
@@ -319,7 +319,7 @@ action:
                     below: !input solar_medium_threshold
                 sequence:
                   - variables:
-                      puissance_voulue: !input low_power_limit
+                      puissance_voulue: !input charge_power_limit
                       puissance_effective: "{{ [[puissance_voulue, marge_dispo] | min, 0] | max }}"
                   - action: number.set_value
                     target: { entity_id: !input input_limit }
