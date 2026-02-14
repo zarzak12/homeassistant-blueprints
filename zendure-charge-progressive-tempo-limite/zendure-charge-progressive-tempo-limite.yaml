@@ -285,15 +285,21 @@ action:
           # LOGIQUE SOLAIRE
           - choose:
 
-              # ☀ Soleil fort → pas de charge
+              # ☀ Soleil fort → petite charge
               - conditions:
                   - condition: numeric_state
                     entity_id: !input solar_forecast_sensor
                     above: !input solar_good_threshold
                 sequence:
+                  - variables:
+                      puissance_voulue: !input charge_power_limit
+                      puissance_effective: "{{ [[puissance_voulue, marge_dispo] | min, 0] | max }}"
+                  - action: number.set_value
+                    target: { entity_id: !input input_limit }
+                    data: { value: "{{ puissance_effective }}" }
                   - action: select.select_option
-                    target: { entity_id: !input zendure_manager }
-                    data: { option: "off" }
+                    target: { entity_id: !input ac_mode }
+                    data: { option: "input" }
 
               # 🌤 Soleil moyen → charge
               - conditions:
