@@ -1,6 +1,6 @@
 # 📘 README.md — Blueprint Home Assistant
 
-# **Zendure – Charge Progressive Solaire + Tempo + Limitation Puissance (Version Simplifiée)**
+# **Zendure – Charge Progressive Solaire + Limitation Puissance (Version Simplifiée)**
 
 Ce blueprint Home Assistant permet de **gérer intelligemment la charge d’une batterie Zendure** (SolarFlow / Hyper / AB2000X / AB3000X…), en se basant sur :
 
