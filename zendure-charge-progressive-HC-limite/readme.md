@@ -4,7 +4,6 @@
 
 Ce blueprint Home Assistant permet de **gérer intelligemment la charge d’une batterie Zendure** (SolarFlow / Hyper / AB2000X / AB3000X…), en se basant sur :
 
-*   la **couleur Tempo du lendemain** (Bleu / Blanc / Rouge)
 *   la **prévision solaire du lendemain** (faible / moyen / fort)
 *   la **puissance instantanée consommée par la maison**
 *   la **puissance maximale souscrite (kVA)**
@@ -32,9 +31,6 @@ Le contrôle serait alors instable ou impossible.
 - **[Zendure Home Assistant](https://github.com/Zendure/Zendure-HA)**  
   Gestion de la batterie Zendure (SolarFlow, Hyper, etc.)
 
-- **[RTE Tempo](https://github.com/hekmon/rtetempo)**  
-  Récupération de la couleur Tempo (Bleu / Blanc / Rouge)
-
 - **Forecast Solar**  
   Fournit la production solaire estimée (kWh) pour le lendemain  
   👉 Capteur typique : `sensor.energy_production_tomorrow`
@@ -42,14 +38,6 @@ Le contrôle serait alors instable ou impossible.
 ---
 
 # 📑 Fonctionnalités
-
-### ✔ Couleur Tempo utilisée pour autoriser la charge
-
-Vous choisissez :
-
-*   charger ou non en **Bleu**
-*   charger ou non en **Blanc**
-*   charger ou non en **Rouge**
 
 ### ✔ Calcul automatique du SOC maximal selon la prévision solaire
 
@@ -88,7 +76,7 @@ Se relance automatiquement sur :
 
 # 📥 Installation
 
-[![Importer dans Home Assistant](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fzarzak12%2Fhomeassistant-blueprints%2Fblob%2F7023bdc64726c464a144894bd5cc2477571ccb0c%2Fzendure-charge-progressive-tempo-limite%2Fzendure-charge-progressive-tempo-limite.yaml)
+[![Importer dans Home Assistant](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fzarzak12%2Fhomeassistant-blueprints%2Fblob%2F7023bdc64726c464a144894bd5cc2477571ccb0c%2Fzendure-charge-progressive-HC-limite%2Fzendure-charge-progressive-HC-limite.yaml)
 
 1.  Copier le fichier `.yaml` dans :
         config/blueprints/automation/
@@ -105,7 +93,6 @@ Se relance automatiquement sur :
 
 | Input                   | Description                      |
 | ----------------------- | -------------------------------- |
-| `tempo_sensor`          | Couleur Tempo du lendemain       |
 | `battery_level_sensor`  | Niveau de batterie (%)           |
 | `solar_forecast_sensor` | Prévision solaire (kWh)          |
 | `home_power_sensor`     | Puissance instantanée maison (W) |
@@ -129,25 +116,12 @@ Se relance automatiquement sur :
 | `max_soc_sun_medium` | SOC max si soleil moyen        |
 | `max_soc_sun_high`   | SOC max si soleil fort         |
 
-### **Autorisation Tempo :**
-
-| Input               | Description                  |
-| ------------------- | ---------------------------- |
-| `allow_tempo_bleu`  | Autoriser la charge en Bleu  |
-| `allow_tempo_blanc` | Autoriser la charge en Blanc |
-| `allow_tempo_rouge` | Autoriser la charge en Rouge |
 
 ***
 
 # 🔍 Fonctionnement détaillé
 
-### 1️⃣ Vérification Tempo
-
-Si la couleur Tempo n’est pas cochée → **aucune charge**, quelle que soit la météo.
-
-***
-
-### 2️⃣ Analyse de la prévision solaire
+### 1️⃣ Analyse de la prévision solaire
 
 Détermine le **SOC maximal** :
 
@@ -157,7 +131,7 @@ Détermine le **SOC maximal** :
 
 ***
 
-### 3️⃣ Stop automatique sur SOC maximal
+### 2️⃣ Stop automatique sur SOC maximal
 
 Si :
 
@@ -169,7 +143,7 @@ Si :
 
 ***
 
-### 4️⃣ Gestion solaire
+### 3️⃣ Gestion solaire
 
 | Soleil | Action                    |
 | ------ | ------------------------- |
@@ -179,7 +153,7 @@ Si :
 
 ***
 
-### 5️⃣ Limitation puissance contrat
+### 4️⃣ Limitation puissance contrat
 
     puissance_max_w = kVA * 1000
     marge_dispo = puissance_max_w - puissance_maison
