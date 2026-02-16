@@ -83,7 +83,7 @@ Se relance automatiquement sur :
 2.  Recharger les blueprints ou redémarrer Home Assistant
 3.  Créer une nouvelle automatisation
 4.  Sélectionner :  
-    **Zendure – Charge Progressive Solaire + Tempo + Limitation Puissance**
+    **Zendure – Charge Progressive Solaire + Limitation Puissance**
 
 ***
 
