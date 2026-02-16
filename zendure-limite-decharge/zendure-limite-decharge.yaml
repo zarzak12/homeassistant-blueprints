@@ -1,0 +1,188 @@
+blueprint:
+  name: Zendure – Top-up SOC en Heures Creuses (limite de décharge)
+  description: >
+    Recharge la batterie pendant une fenêtre horaire jusqu’à atteindre un seuil SOC minimal,
+    pour éviter les décharges excessives après plusieurs jours sans soleil.
+  domain: automation
+
+  input:
+    # Capteurs & entités Zendure
+    battery_level_sensor:
+      name: Niveau de batterie (%)
+      selector:
+        entity:
+          domain: sensor
+
+    zendure_manager:
+      name: Zendure Manager (select)
+      selector:
+        entity:
+          domain: select
+
+    ac_mode:
+      name: Mode AC (select)
+      selector:
+        entity:
+          domain: select
+
+    input_limit:
+      name: Limite d'entrée (W) (number)
+      selector:
+        entity:
+          domain: number
+
+    # Fenêtre horaire
+    start_time:
+      name: Heure de début HC
+      default: "22:00:00"
+      selector:
+        time:
+
+    end_time:
+      name: Heure de fin HC
+      default: "06:00:00"
+      selector:
+        time:
+
+    # Seuil à atteindre
+    target_soc:
+      name: Seuil SOC minimal à atteindre (%)
+      description: Si la batterie est sous ce seuil au démarrage de fenêtre, on recharge jusqu’à l’atteindre.
+      default: 10
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+
+    # Puissance de charge à utiliser pendant le "top-up"
+    charge_power_limit:
+      name: Puissance de charge utilisée (W)
+      description: Puissance à fixer sur la limite d'entrée pendant la recharge HC.
+      default: 600
+      selector:
+        number:
+          min: 0
+          max: 1200
+          step: 50
+
+# ──────────────────────────────
+#            TRIGGERS
+# ──────────────────────────────
+trigger:
+  # Démarrage et fin de fenêtre
+  - platform: time
+    at: !input start_time
+    id: start_window
+
+  - platform: time
+    at: !input end_time
+    id: end_window
+
+  # Réactivité : si le SOC change pendant la fenêtre, on (re)vérifie
+  - platform: state
+    entity_id: !input battery_level_sensor
+    id: soc_change
+
+condition: []
+
+# ──────────────────────────────
+#             ACTIONS
+# ──────────────────────────────
+action:
+  # Variables communes
+  - variables:
+      battery_entity: !input battery_level_sensor
+      target_soc: !input target_soc
+      soc: "{{ states(battery_entity) | float(0) }}"
+      target: "{{ (target_soc | float(10)) }}"
+
+  # 1) Fin de fenêtre → arrêt complet (sécurité)
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: end_window
+        sequence:
+          - service: persistent_notification.create
+            data:
+              title: "Zendure – Fin fenêtre HC"
+              message: >
+                Fin de la fenêtre HC. Arrêt du mode Top‑Up. SOC actuel : {{ soc }}%.
+          - action: select.select_option
+            target: { entity_id: !input ac_mode }
+            data: { option: "output" }
+          - action: select.select_option
+            target: { entity_id: !input zendure_manager }
+            data: { option: "off" }
+          - stop: "Fin de fenêtre HC – arrêt total."
+
+  # 2) Le reste ne s’applique que si on est à l’heure de début OU dans la plage horaire
+  - choose:
+      - conditions:
+          - condition: or
+            conditions:
+              - condition: trigger
+                id: start_window
+              - condition: time
+                after: !input start_time
+                before: !input end_time
+        sequence:
+
+          # 2.a) Si le seuil est déjà atteint → on s’assure que tout est à l’arrêt
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ soc >= target }}"
+                sequence:
+                  - service: persistent_notification.create
+                    data:
+                      title: "Zendure – Top‑Up"
+                      message: >
+                        SOC déjà au seuil ({{ soc }}% ≥ {{ target }}%) – pas de charge.
+                  - action: select.select_option
+                    target: { entity_id: !input ac_mode }
+                    data: { option: "output" }
+                  - action: select.select_option
+                    target: { entity_id: !input zendure_manager }
+                    data: { option: "off" }
+                  - stop: "SOC déjà au seuil ou supérieur – pas de charge."
+
+          # 2.b) Sinon, on top-up pendant la fenêtre
+          - service: persistent_notification.create
+            data:
+              title: "Zendure – Top‑Up HC"
+              message: >
+                Fenêtre HC ouverte. Démarrage du Top‑Up vers {{ target }}% (SOC actuel : {{ soc }}%).
+          - action: number.set_value
+            target: { entity_id: !input input_limit }
+            data:
+              value: !input charge_power_limit
+          - action: select.select_option
+            target: { entity_id: !input ac_mode }
+            data: { option: "input" }
+
+          # 2.c) Si, pendant la fenêtre, le SOC atteint la cible → on coupe
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: >
+                      {{ states(battery_entity) | float(0) >= target }}
+                sequence:
+                  - service: persistent_notification.create
+                    data:
+                      title: "Zendure – Top‑Up terminé"
+                      message: >
+                        Seuil SOC atteint ({{ states(battery_entity) | float(0) }}% ≥ {{ target }}%). Charge arrêtée.
+                  - action: select.select_option
+                    target: { entity_id: !input ac_mode }
+                    data: { option: "output" }
+                  - action: select.select_option
+                    target: { entity_id: !input zendure_manager }
+                    data: { option: "off" }
+
+      # 3) Hors fenêtre → ne rien faire
+      - conditions: []
+        sequence:
+          - stop: "Hors fenêtre HC – aucune action."
+
+mode: restart
