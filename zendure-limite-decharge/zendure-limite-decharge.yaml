@@ -134,11 +134,6 @@ action:
                   - condition: template
                     value_template: "{{ soc >= target }}"
                 sequence:
-                  - service: persistent_notification.create
-                    data:
-                      title: "Zendure – Top‑Up"
-                      message: >
-                        SOC déjà au seuil ({{ soc }}% ≥ {{ target }}%) – pas de charge.
                   - action: select.select_option
                     target: { entity_id: !input ac_mode }
                     data: { option: "output" }
