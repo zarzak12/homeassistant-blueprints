@@ -78,6 +78,8 @@ Se relance automatiquement sur :
 
 [![Importer dans Home Assistant](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https://github.com/zarzak12/homeassistant-blueprints/blob/main/zendure-charge-progressive-HC-limite/zendure-charge-progressive-HC-limite.yaml)
 
+OU 
+
 1.  Copier le fichier `.yaml` dans :
         config/blueprints/automation/
 2.  Recharger les blueprints ou redémarrer Home Assistant
