@@ -1,6 +1,6 @@
 # Zendure - Programmation Horaire de Mode
 
-[![Importer dans Home Assistant](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fzarzak12%2Fhomeassistant-blueprints%2Fblob%2Fmain%2Fzendure-mode-excedent-journee%2Fzendure_mode_excedent_journee.yaml)
+[![Importer dans Home Assistant](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https://github.com/zarzak12/homeassistant-blueprints/blob/main/zendure_mode_excedent_journee/zendure_mode_excedent_journee.yaml))
 
 ## Description
 
