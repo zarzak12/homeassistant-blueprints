@@ -224,7 +224,7 @@ Si :
 
 ***
 
-Doit être combiné avec le : **[ZENDURE - Mode SMART en journée](https://github.com/zarzak12/homeassistant-blueprints/blob/1.0.0/zendure_mode_excedent_journee)**
+Doit être combiné avec le : **[ZENDURE - Mode SMART en journée](https://github.com/zarzak12/homeassistant-blueprints/blob/main/zendure_mode_excedent_journee)**
 
 ***
 
