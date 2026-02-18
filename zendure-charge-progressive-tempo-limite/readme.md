@@ -88,7 +88,7 @@ Se relance automatiquement sur :
 
 # 📥 Installation
 
-[![Importer dans Home Assistant](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fzarzak12%2Fhomeassistant-blueprints%2Fblob%2Fmain%2Fzendure-charge-progressive-tempo-limite%2Fzendure-charge-progressive-tempo-limite.yam)
+[![Importer dans Home Assistant](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fzarzak12%2Fhomeassistant-blueprints%2Fblob%2Fmain%2Fzendure-charge-progressive-tempo-limite%2Fzendure-charge-progressive-tempo-limite.yaml)
 
 1.  Copier le fichier `.yaml` dans :
         config/blueprints/automation/
