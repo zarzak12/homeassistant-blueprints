@@ -155,7 +155,17 @@ blueprint:
           min: 0
           max: 2400
           step: 50
-
+          
+    input_number:
+      solar_forecast_frozen:
+        name: SYS - Solar Forecast Frozen
+        min: 0
+        max: 50
+        step: 0.1
+    
+    input_boolean:
+      solar_forecast_locked:
+        name: SYS - Solar Lock
 #──────────────────────────────
 #           TRIGGERS
 #──────────────────────────────
@@ -216,9 +226,8 @@ action:
           - stop: "Jour Tempo non autorisé – arrêt de la charge."
 
 
-  # FENÊTRE HORAIRE : STOP À LA FIN
+  # FENÊTRE HORAIRE
   - choose:
-      # ☀️ Soleil élevé → pas de charge réseau
       - conditions:
           - condition: or
             conditions:
@@ -229,7 +238,17 @@ action:
                 before: !input end_charge_time
         sequence:
 
-          # SÉCURITÉ : ON OFF AVANT DÉCISION
+          # RESET LOCK À LA FIN DE NUIT
+          - choose:
+              - conditions:
+                  - condition: time
+                    after: !input end_charge_time
+                sequence:
+                  - service: input_boolean.turn_off
+                    target:
+                      entity_id: input_boolean.solar_forecast_locked
+
+          # SÉCURITÉ : OFF AVANT DÉCISION
           - action: select.select_option
             target:
               entity_id: !input zendure_manager
@@ -252,12 +271,14 @@ action:
               conso: "{{ states(home_power_sensor) | float(0) }}"
               marge: "{{ pmax - conso }}"
               soc_actuel: "{{ states(battery_level_sensor) | float(0) }}"
-              sun: "{{ states(solar_forecast_sensor) | float(0) }}"
+
+              # 👇 UTILISATION VALEUR FIGÉE
+              sun: "{{ states('input_number.solar_forecast_frozen') | float(0) }}"
+              sun_live: "{{ states(solar_forecast_sensor) | float(0) }}"
 
               puissance_max_w: "{{ (puissance_max_kva | float(9)) * 1000 }}"
               conso_maison: "{{ states(home_power_sensor) | float(0) }}"
               marge_dispo: "{{ puissance_max_w - conso_maison }}"
-
 
               max_soc: >
                 {% if sun >= solar_good_threshold %}
@@ -267,6 +288,22 @@ action:
                 {% else %}
                   {{ max_soc_sun_low }}
                 {% endif %}
+
+          # 🔒 FIGE AU PREMIER PASSAGE EN CHARGE
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: input_boolean.solar_forecast_locked
+                    state: "off"
+                sequence:
+                  - service: input_number.set_value
+                    target:
+                      entity_id: input_number.solar_forecast_frozen
+                    data:
+                      value: "{{ sun_live }}"
+                  - service: input_boolean.turn_on
+                    target:
+                      entity_id: input_boolean.solar_forecast_locked
 
           # STOP SI SOC ⩾ SOC MAX
           - choose:
