@@ -218,7 +218,7 @@ action:
         - condition: or
           conditions:
             - condition: time
-              after: !input start_time
+              after: !input charge_time
             - condition: time
               before: !input end_charge_time
 
