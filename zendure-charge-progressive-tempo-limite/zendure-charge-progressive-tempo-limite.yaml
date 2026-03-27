@@ -212,6 +212,18 @@ action:
             value_template: "{{ not tempo_allowed }}"
         sequence:
           - stop: "Jour Tempo non autorisé – arrêt de la charge."
+  
+  # ✔️ SÉCURITÉ : couper Zendure Manager UNE SEULE FOIS
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ tempo_allowed }}"
+        sequence:
+          - action: select.select_option
+            target:
+              entity_id: !input zendure_manager
+            data:
+              option: "off"
 
   # FENÊTRE HORAIRE : STOP À LA FIN
   - repeat:
@@ -224,14 +236,6 @@ action:
               before: !input end_charge_time
 
       sequence:
-
-        # SÉCURITÉ : ON OFF AVANT DÉCISION
-        - action: select.select_option
-          target:
-            entity_id: !input zendure_manager
-          data:
-            option: "off"
-
         # VARIABLES ÉNERGIE
         - variables:
             puissance_max_kva: !input puissance_max_kva
