@@ -217,7 +217,6 @@ action:
             data:
               option: "off"
       - conditions:
-          - condition: not
             conditions: template
             value_template: "{{ not tempo_allowed }}"
         sequence:
