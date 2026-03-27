@@ -209,14 +209,6 @@ action:
   - choose:
       - conditions:
           - condition: template
-            value_template: "{{ not tempo_allowed }}"
-        sequence:
-          - stop: "Jour Tempo non autorisé – arrêt de la charge."
-  
-  # ✔️ SÉCURITÉ : couper Zendure Manager UNE SEULE FOIS
-  - choose:
-      - conditions:
-          - condition: template
             value_template: "{{ tempo_allowed }}"
         sequence:
           - action: select.select_option
@@ -224,6 +216,12 @@ action:
               entity_id: !input zendure_manager
             data:
               option: "off"
+      - conditions:
+          - condition: not
+            conditions: template
+            value_template: "{{ not tempo_allowed }}"
+        sequence:
+          - stop: "Jour Tempo non autorisé – arrêt de la charge."
 
   # FENÊTRE HORAIRE : STOP À LA FIN
   - repeat:
