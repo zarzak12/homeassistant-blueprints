@@ -205,8 +205,9 @@ action:
            or (tempo_clean == 'blanc' and allow_blanc)
            or (tempo_clean == 'rouge' and allow_rouge) }}
 
-  # ❌ STOP SI TEMPO NON AUTORISÉ
+  # ✔ STOP SI TEMPO NON AUTORISÉ ou OFF sécurité si autorisé
   - choose:
+      # ✔ Cas 1 : Tempo autorisé → sécurité ONCE
       - conditions:
           - condition: template
             value_template: "{{ tempo_allowed }}"
@@ -216,8 +217,10 @@ action:
               entity_id: !input zendure_manager
             data:
               option: "off"
+  
+      # ✔ Cas 2 : Tempo NON autorisé → STOP immédiat
       - conditions:
-            conditions: template
+          - condition: template
             value_template: "{{ not tempo_allowed }}"
         sequence:
           - stop: "Jour Tempo non autorisé – arrêt de la charge."
