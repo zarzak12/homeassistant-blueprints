@@ -185,7 +185,7 @@ action:
   # NORMALISATION TEMPO
   - variables:
       # 👇 FIGÉ UNE SEULE FOIS
-      sun: "{{ sun if sun is defined else states(solar_forecast_sensor) | float(0) }}"
+      sun: "{{ states(solar_forecast_sensor) | float(0) }}"
       tempo_sensor: !input tempo_sensor
       tempo_raw: "{{ states(tempo_sensor) | default('', true) }}"
       tempo_clean: >
