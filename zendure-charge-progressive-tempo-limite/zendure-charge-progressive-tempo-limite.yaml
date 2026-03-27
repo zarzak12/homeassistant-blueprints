@@ -215,8 +215,12 @@ action:
   # FENÊTRE HORAIRE : STOP À LA FIN
   - repeat:
       while:
-        - condition: time
-          before: !input end_charge_time
+        - condition: or
+          conditions:
+            - condition: time
+              after: !input start_time
+            - condition: time
+              before: !input end_charge_time
 
       sequence:
 
