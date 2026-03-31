@@ -247,8 +247,8 @@ action:
           - stop: "Jour Tempo non autorisé – arrêt de la charge."
 
       - conditions:
-          - condition: template
-            value_template: "{{ stop_charge }}"
+          - condition: trigger 
+            id: stop_charge
         sequence:
           - actions:
             # 🔌 Stop toute charge batterie depuis le réseau
