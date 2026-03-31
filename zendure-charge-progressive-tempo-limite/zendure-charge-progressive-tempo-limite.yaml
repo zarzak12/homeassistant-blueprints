@@ -247,9 +247,8 @@ action:
           - stop: "Jour Tempo non autorisé – arrêt de la charge."
 
       - conditions:
-          - condition: time
-            after: !input start_time
-            before: !input end_time
+          - condition: template
+            value_template: "{{ stop_charge }}"
         sequence:
           - actions:
             # 🔌 Stop toute charge batterie depuis le réseau
