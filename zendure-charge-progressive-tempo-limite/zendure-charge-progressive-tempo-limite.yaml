@@ -228,25 +228,10 @@ action:
 
   # ✔ STOP SI TEMPO NON AUTORISÉ ou OFF sécurité si autorisé
   - choose:
-      # ✔ Cas 1 : Tempo autorisé → sécurité ONCE
+      # ✔ Cas 1 : Heure de fin - bascule de mode
       - conditions:
           - condition: template
             value_template: "{{ tempo_allowed }}"
-        sequence:
-          - action: select.select_option
-            target:
-              entity_id: !input zendure_manager
-            data:
-              option: "off"
-  
-      # ✔ Cas 2 : Tempo NON autorisé → STOP immédiat
-      - conditions:
-          - condition: template
-            value_template: "{{ not tempo_allowed }}"
-        sequence:
-          - stop: "Jour Tempo non autorisé – arrêt de la charge."
-
-      - conditions:
           - condition: trigger 
             id: stop_charge
         sequence:
@@ -264,6 +249,23 @@ action:
               data:
                 option: !input operation_mode
             - stop: "Journée en cours."
+      # ✔ Cas 2 : Tempo autorisé → sécurité ONCE
+      - conditions:
+          - condition: template
+            value_template: "{{ tempo_allowed }}"
+        sequence:
+          - action: select.select_option
+            target:
+              entity_id: !input zendure_manager
+            data:
+              option: "off"
+  
+      # ✔ Cas 3 : Tempo NON autorisé → STOP immédiat
+      - conditions:
+          - condition: template
+            value_template: "{{ not tempo_allowed }}"
+        sequence:
+          - stop: "Jour Tempo non autorisé – arrêt de la charge."      
 
   # FENÊTRE HORAIRE : STOP À LA FIN
   - repeat:
