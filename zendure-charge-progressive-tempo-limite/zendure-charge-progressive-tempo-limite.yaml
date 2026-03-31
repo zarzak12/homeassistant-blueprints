@@ -40,7 +40,25 @@ blueprint:
       selector:
         entity:
           domain: select
-
+          
+    operation_mode:
+      name: Mode de fonctionnement
+      description: Mode à activer pendant la journée
+      default: "smart"
+      selector:
+        select:
+          options:
+            - label: "Couplage intelligent (Smart)"
+              value: "smart"
+            - label: "Charge intelligente"
+              value: "smart_charging"
+            - label: "Décharge intelligente"
+              value: "smart_discharging"
+            - label: "Puissance manuelle"
+              value: "manual"
+            - label: "Arrêt"
+              value: "off"
+              
     input_limit:
       name: Limite d'entrée (W)
       selector:
@@ -163,6 +181,9 @@ trigger:
   - platform: time
     at: !input charge_time
     id: start_charge
+  - platform: time
+    at: !input end_charge_time
+    id: stop_charge
 
 condition:
   - condition: or
@@ -224,6 +245,25 @@ action:
             value_template: "{{ not tempo_allowed }}"
         sequence:
           - stop: "Jour Tempo non autorisé – arrêt de la charge."
+
+      - conditions:
+          - condition: time
+            after: !input start_time
+            before: !input end_time
+        sequence:
+          - actions:
+            # 🔌 Stop toute charge batterie depuis le réseau
+            - action: select.select_option
+              target:
+                entity_id: !input ac_mode
+              data:
+                option: "output"
+                
+            - action: select.select_option
+              target:
+                entity_id: !input zendure_manager
+              data:
+                option: !input operation_mode
 
   # FENÊTRE HORAIRE : STOP À LA FIN
   - repeat:
