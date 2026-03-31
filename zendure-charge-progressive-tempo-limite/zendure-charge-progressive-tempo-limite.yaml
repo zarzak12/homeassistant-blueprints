@@ -263,6 +263,7 @@ action:
                 entity_id: !input zendure_manager
               data:
                 option: !input operation_mode
+            - stop: "Journée en cours."
 
   # FENÊTRE HORAIRE : STOP À LA FIN
   - repeat:
