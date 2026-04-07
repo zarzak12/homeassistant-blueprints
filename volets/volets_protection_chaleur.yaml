@@ -1,579 +1,261 @@
 blueprint:
-  name: "Protection chaleur - Volets sud (avec et sans retour)"
+  name: "Protection chaleur - Volets sud/ouest (avec et sans retour)"
   description: >
-    Ferme progressivement les volets côté sud (et ouest) selon la température
-    extérieure et intérieure, la position du soleil et la saison.
-    Gère séparément les BSO avec retour de position et les volets sans retour
-    pilotés par minuterie.
+    Gestion automatique des volets et BSO selon la température,
+    la position du soleil et la saison.
+    Compatible volets avec retour de position et sans retour (minuterie).
+    Fonctionne en continu, sans mode absence.
+
   domain: automation
-  author: "Home Assistant Blueprint"
+
   input:
 
-    # ── Capteurs ──────────────────────────────────────────────
+    # ───── Capteurs ─────
     capteur_temp_ext:
-      name: "Capteur température extérieure"
-      description: "Capteur côté nord"
+      name: Température extérieure
       selector:
         entity:
           domain: sensor
           device_class: temperature
 
     capteur_temp_int:
-      name: "Capteur température intérieure"
+      name: Température intérieure
       selector:
         entity:
           domain: sensor
           device_class: temperature
 
-    # ── BSO avec retour de position ───────────────────────────
+    # ───── BSO (avec retour) ─────
     bso_avec_retour:
-      name: "BSO / Volets avec retour de position"
-      description: "Vos BSO Somfy IO (retour d'info disponible)"
-      selector:
-        target:
-          entity:
-            domain: cover
-
-    # ── Volets sans retour ────────────────────────────────────
-    volet_baie_sud:
-      name: "Baie vitrée sud (sans retour)"
+      name: BSO avec retour de position
       selector:
         entity:
           domain: cover
+          multiple: true
+
+    # ───── Volets sans retour ─────
+    volet_baie_sud:
       default: ""
+      selector:
+        entity:
+          domain: cover
 
     duree_baie_sud:
-      name: "Durée descente complète - baie sud (secondes)"
+      default: 30
       selector:
         number:
           min: 5
           max: 120
-          step: 1
           unit_of_measurement: s
-      default: 30
 
     volet_panoramique_sud:
-      name: "Panoramique sud (sans retour)"
+      default: ""
       selector:
         entity:
           domain: cover
-      default: ""
 
     duree_panoramique_sud:
-      name: "Durée descente complète - panoramique sud (secondes)"
+      default: 30
       selector:
         number:
           min: 5
           max: 120
-          step: 1
-          unit_of_measurement: s
-      default: 30
 
     volet_baie_ouest:
-      name: "Baie vitrée ouest (sans retour)"
+      default: ""
       selector:
         entity:
           domain: cover
-      default: ""
 
     duree_baie_ouest:
-      name: "Durée descente complète - baie ouest (secondes)"
+      default: 30
       selector:
         number:
           min: 5
           max: 120
-          step: 1
-          unit_of_measurement: s
-      default: 30
 
     volet_panoramique_ouest:
-      name: "Panoramique ouest (sans retour)"
+      default: ""
       selector:
         entity:
           domain: cover
-      default: ""
 
     duree_panoramique_ouest:
-      name: "Durée descente complète - panoramique ouest (secondes)"
+      default: 30
       selector:
         number:
           min: 5
           max: 120
-          step: 1
-          unit_of_measurement: s
-      default: 30
 
-    # ── Soleil ────────────────────────────────────────────────
+    # ───── Soleil ─────
     azimut_min:
-      name: "Azimut minimum (activation)"
-      description: "Le soleil doit dépasser cet angle pour activer les volets"
-      selector:
-        number:
-          min: 0
-          max: 180
-          step: 5
-          unit_of_measurement: "°"
       default: 90
+      selector:
+        number: { min: 0, max: 180 }
 
     azimut_max:
-      name: "Azimut maximum (désactivation)"
-      selector:
-        number:
-          min: 180
-          max: 360
-          step: 5
-          unit_of_measurement: "°"
       default: 270
-
-    # ── Seuils Printemps ──────────────────────────────────────
-    printemps_ext_p1:
-      name: "Printemps - Palier 1 température ext (°C)"
       selector:
-        number:
-          min: 10
-          max: 40
-          step: 0.5
-          unit_of_measurement: "°C"
-      default: 18
+        number: { min: 180, max: 360 }
 
-    printemps_ext_p2:
-      name: "Printemps - Palier 2 température ext (°C)"
+    elevation_min:
+      default: 10
       selector:
-        number:
-          min: 10
-          max: 40
-          step: 0.5
-          unit_of_measurement: "°C"
-      default: 22
+        number: { min: 0, max: 90 }
 
-    printemps_ext_p3:
-      name: "Printemps - Palier 3 température ext (°C)"
+    # ───── Période chaude ─────
+    periode_chaude_debut:
       selector:
-        number:
-          min: 10
-          max: 40
-          step: 0.5
-          unit_of_measurement: "°C"
-      default: 26
+        date: {}
 
-    printemps_int_p1:
-      name: "Printemps - Palier 1 température int (°C)"
+    periode_chaude_fin:
       selector:
-        number:
-          min: 15
-          max: 40
-          step: 0.5
-          unit_of_measurement: "°C"
-      default: 21
+        date: {}
 
-    printemps_int_p2:
-      name: "Printemps - Palier 2 température int (°C)"
+    # ───── Seuils CHAUD ─────
+    chaud_ext_p1: { default: 25, selector: { number: { min: 0, max: 50 }}}
+    chaud_ext_p2: { default: 29, selector: { number: { min: 0, max: 50 }}}
+    chaud_ext_p3: { default: 33, selector: { number: { min: 0, max: 50 }}}
+
+    chaud_int_p1: { default: 24, selector: { number: { min: 0, max: 50 }}}
+    chaud_int_p2: { default: 27, selector: { number: { min: 0, max: 50 }}}
+    chaud_int_p3: { default: 30, selector: { number: { min: 0, max: 50 }}}
+
+    # ───── Seuils FROID ─────
+    froid_ext_p1: { default: 15, selector: { number: { min: 0, max: 50 }}}
+    froid_ext_p2: { default: 20, selector: { number: { min: 0, max: 50 }}}
+    froid_ext_p3: { default: 25, selector: { number: { min: 0, max: 50 }}}
+
+    froid_int_p1: { default: 20, selector: { number: { min: 0, max: 50 }}}
+    froid_int_p2: { default: 23, selector: { number: { min: 0, max: 50 }}}
+    froid_int_p3: { default: 26, selector: { number: { min: 0, max: 50 }}}
+
+    # ───── Mémoire ─────
+    dernier_palier:
+      name: Dernier palier appliqué
       selector:
-        number:
-          min: 15
-          max: 40
-          step: 0.5
-          unit_of_measurement: "°C"
-      default: 24
+        entity:
+          domain: input_number
 
-    printemps_int_p3:
-      name: "Printemps - Palier 3 température int (°C)"
-      selector:
-        number:
-          min: 15
-          max: 40
-          step: 0.5
-          unit_of_measurement: "°C"
-      default: 27
-
-    # ── Seuils Été ────────────────────────────────────────────
-    ete_ext_p1:
-      name: "Été - Palier 1 température ext (°C)"
-      selector:
-        number:
-          min: 10
-          max: 45
-          step: 0.5
-          unit_of_measurement: "°C"
-      default: 25
-
-    ete_ext_p2:
-      name: "Été - Palier 2 température ext (°C)"
-      selector:
-        number:
-          min: 10
-          max: 45
-          step: 0.5
-          unit_of_measurement: "°C"
-      default: 29
-
-    ete_ext_p3:
-      name: "Été - Palier 3 température ext (°C)"
-      selector:
-        number:
-          min: 10
-          max: 45
-          step: 0.5
-          unit_of_measurement: "°C"
-      default: 33
-
-    ete_int_p1:
-      name: "Été - Palier 1 température int (°C)"
-      selector:
-        number:
-          min: 15
-          max: 45
-          step: 0.5
-          unit_of_measurement: "°C"
-      default: 24
-
-    ete_int_p2:
-      name: "Été - Palier 2 température int (°C)"
-      selector:
-        number:
-          min: 15
-          max: 45
-          step: 0.5
-          unit_of_measurement: "°C"
-      default: 27
-
-    ete_int_p3:
-      name: "Été - Palier 3 température int (°C)"
-      selector:
-        number:
-          min: 15
-          max: 45
-          step: 0.5
-          unit_of_measurement: "°C"
-      default: 30
-
-    # ── Seuils Automne ────────────────────────────────────────
-    automne_ext_p1:
-      name: "Automne - Palier 1 température ext (°C)"
-      selector:
-        number:
-          min: 10
-          max: 40
-          step: 0.5
-          unit_of_measurement: "°C"
-      default: 16
-
-    automne_ext_p2:
-      name: "Automne - Palier 2 température ext (°C)"
-      selector:
-        number:
-          min: 10
-          max: 40
-          step: 0.5
-          unit_of_measurement: "°C"
-      default: 20
-
-    automne_ext_p3:
-      name: "Automne - Palier 3 température ext (°C)"
-      selector:
-        number:
-          min: 10
-          max: 40
-          step: 0.5
-          unit_of_measurement: "°C"
-      default: 24
-
-    automne_int_p1:
-      name: "Automne - Palier 1 température int (°C)"
-      selector:
-        number:
-          min: 15
-          max: 40
-          step: 0.5
-          unit_of_measurement: "°C"
-      default: 20
-
-    automne_int_p2:
-      name: "Automne - Palier 2 température int (°C)"
-      selector:
-        number:
-          min: 15
-          max: 40
-          step: 0.5
-          unit_of_measurement: "°C"
-      default: 23
-
-    automne_int_p3:
-      name: "Automne - Palier 3 température int (°C)"
-      selector:
-        number:
-          min: 15
-          max: 40
-          step: 0.5
-          unit_of_measurement: "°C"
-      default: 26
-
-    # ── Seuils Hiver ──────────────────────────────────────────
-    hiver_ext_p1:
-      name: "Hiver - Palier 1 température ext (°C)"
-      selector:
-        number:
-          min: 5
-          max: 35
-          step: 0.5
-          unit_of_measurement: "°C"
-      default: 14
-
-    hiver_ext_p2:
-      name: "Hiver - Palier 2 température ext (°C)"
-      selector:
-        number:
-          min: 5
-          max: 35
-          step: 0.5
-          unit_of_measurement: "°C"
-      default: 18
-
-    hiver_ext_p3:
-      name: "Hiver - Palier 3 température ext (°C)"
-      selector:
-        number:
-          min: 5
-          max: 35
-          step: 0.5
-          unit_of_measurement: "°C"
-      default: 22
-
-    hiver_int_p1:
-      name: "Hiver - Palier 1 température int (°C)"
-      selector:
-        number:
-          min: 15
-          max: 35
-          step: 0.5
-          unit_of_measurement: "°C"
-      default: 19
-
-    hiver_int_p2:
-      name: "Hiver - Palier 2 température int (°C)"
-      selector:
-        number:
-          min: 15
-          max: 35
-          step: 0.5
-          unit_of_measurement: "°C"
-      default: 22
-
-    hiver_int_p3:
-      name: "Hiver - Palier 3 température int (°C)"
-      selector:
-        number:
-          min: 15
-          max: 35
-          step: 0.5
-          unit_of_measurement: "°C"
-      default: 25
-
-    # ── Saison active ─────────────────────────────────────────
-    saison_active:
-      name: "Saison active"
-      description: "Choisissez la saison pour appliquer les bons seuils"
-      selector:
-        select:
-          options:
-            - label: "Printemps"
-              value: "printemps"
-            - label: "Été"
-              value: "ete"
-            - label: "Automne"
-              value: "automne"
-            - label: "Hiver"
-              value: "hiver"
-      default: "ete"
-
-# ── Déclencheurs ──────────────────────────────────────────────
 trigger:
   - platform: time_pattern
-    minutes: "/5"
-  - platform: state
-    entity_id:
-      - !input capteur_temp_ext
-      - !input capteur_temp_int
-      - sun.sun
+    minutes: "/10"
 
-# ── Condition soleil côté sud ─────────────────────────────────
-condition:
-  - condition: template
-    value_template: >
-      {% set azimut = state_attr('sun.sun', 'azimuth') | float(0) %}
-      {{ azimut > (azimut_min | default(90))
-         and azimut < (azimut_max | default(270)) }}
+mode: restart
 
-# ── Action principale ─────────────────────────────────────────
 action:
+
   - variables:
-      saison: !input saison_active
       capteur_temp_ext: !input capteur_temp_ext
       capteur_temp_int: !input capteur_temp_int
+      azimut_min: !input azimut_min
+      azimut_max: !input azimut_max
+      elevation_min: !input elevation_min
+      periode_chaude_debut: !input periode_chaude_debut
+      periode_chaude_fin: !input periode_chaude_fin
+      
       temp_ext: "{{ states(capteur_temp_ext) | float(0) }}"
-      temp_int: "{{ states(capteur_temp_int) | float(0) }}"      
+      temp_int: "{{ states(capteur_temp_int) | float(0) }}"
 
-      s1_ext: "{{ expand(input)[saison ~ '_ext_p1'] | default(99) | float }}"
-      s2_ext: "{{ expand(input)[saison ~ '_ext_p2'] | default(99) | float }}"
-      s3_ext: "{{ expand(input)[saison ~ '_ext_p3'] | default(99) | float }}"
-      s1_int: "{{ expand(input)[saison ~ '_int_p1'] | default(99) | float }}"
-      s2_int: "{{ expand(input)[saison ~ '_int_p2'] | default(99) | float }}"
-      s3_int: "{{ expand(input)[saison ~ '_int_p3'] | default(99) | float }}"
+      azimut: "{{ state_attr('sun.sun', 'azimuth') | float(0) }}"
+      elevation: "{{ state_attr('sun.sun', 'elevation') | float(0) }}"
+      soleil_ok: >
+        {{ azimut > azimut_min
+           and azimut < azimut_max
+           and elevation > elevation_min }}
 
-      # Résolution directe des seuils selon saison
-      s1e: >
-        {% if saison == 'printemps' %} {{ printemps_ext_p1 }}
-        {% elif saison == 'ete' %} {{ ete_ext_p1 }}
-        {% elif saison == 'automne' %} {{ automne_ext_p1 }}
-        {% else %} {{ hiver_ext_p1 }}
+      periode_chaude: >
+        {% set d = strptime(periode_chaude_debut, '%Y-%m-%d') %}
+        {% set f = strptime(periode_chaude_fin, '%Y-%m-%d') %}
+        {% set n = now().timestamp() %}
+        {% if d.timestamp() <= f.timestamp() %}
+          {{ d.timestamp() <= n <= f.timestamp() }}
+        {% else %}
+          {{ n >= d.timestamp() or n <= f.timestamp() }}
         {% endif %}
-      s2e: >
-        {% if saison == 'printemps' %} {{ printemps_ext_p2 }}
-        {% elif saison == 'ete' %} {{ ete_ext_p2 }}
-        {% elif saison == 'automne' %} {{ automne_ext_p2 }}
-        {% else %} {{ hiver_ext_p2 }}
-        {% endif %}
-      s3e: >
-        {% if saison == 'printemps' %} {{ printemps_ext_p3 }}
-        {% elif saison == 'ete' %} {{ ete_ext_p3 }}
-        {% elif saison == 'automne' %} {{ automne_ext_p3 }}
-        {% else %} {{ hiver_ext_p3 }}
-        {% endif %}
-      s1i: >
-        {% if saison == 'printemps' %} {{ printemps_int_p1 }}
-        {% elif saison == 'ete' %} {{ ete_int_p1 }}
-        {% elif saison == 'automne' %} {{ automne_int_p1 }}
-        {% else %} {{ hiver_int_p1 }}
-        {% endif %}
-      s2i: >
-        {% if saison == 'printemps' %} {{ printemps_int_p2 }}
-        {% elif saison == 'ete' %} {{ ete_int_p2 }}
-        {% elif saison == 'automne' %} {{ automne_int_p2 }}
-        {% else %} {{ hiver_int_p2 }}
-        {% endif %}
-      s3i: >
-        {% if saison == 'printemps' %} {{ printemps_int_p3 }}
-        {% elif saison == 'ete' %} {{ ete_int_p3 }}
-        {% elif saison == 'automne' %} {{ automne_int_p3 }}
-        {% else %} {{ hiver_int_p3 }}
-        {% endif %}
+
+      chaud_ext_p1: !input chaud_ext_p1
+      chaud_ext_p2: !input chaud_ext_p2
+      chaud_ext_p3: !input chaud_ext_p3
+      froid_ext_p1: !input froid_ext_p1
+      froid_ext_p2: !input froid_ext_p2
+      froid_ext_p3: !input froid_ext_p3
+      dernier_palier: !input dernier_palier
+      
+      s1e: "{{ chaud_ext_p1 if periode_chaude else froid_ext_p1 }}"
+      s2e: "{{ chaud_ext_p2 if periode_chaude else froid_ext_p2 }}"
+      s3e: "{{ chaud_ext_p3 if periode_chaude else froid_ext_p3 }}"
+      s1i: "{{ chaud_int_p1 if periode_chaude else froid_int_p1 }}"
+      s2i: "{{ chaud_int_p2 if periode_chaude else froid_int_p2 }}"
+      s3i: "{{ chaud_int_p3 if periode_chaude else froid_int_p3 }}"
 
       palier: >
-        {% if temp_ext >= s3e | float or temp_int >= s3i | float %} 3
-        {% elif temp_ext >= s2e | float or temp_int >= s2i | float %} 2
-        {% elif temp_ext >= s1e | float or temp_int >= s1i | float %} 1
+        {% if temp_ext >= s3e or temp_int >= s3i %} 3
+        {% elif temp_ext >= s2e or temp_int >= s2i %} 2
+        {% elif temp_ext >= s1e or temp_int >= s1i %} 1
         {% else %} 0
         {% endif %}
 
-      pos_bso: >
-        {% if palier == '3' %} 10
-        {% elif palier == '2' %} 50
-        {% elif palier == '1' %} 75
-        {% else %} -1
-        {% endif %}
+      ratio: "{{ {3: 0.9, 2: 0.5, 1: 0.25, 0: 0}[palier] }}"
 
-      ratio: >
-        {% if palier == '3' %} 0.90
-        {% elif palier == '2' %} 0.50
-        {% elif palier == '1' %} 0.25
-        {% else %} 0
-        {% endif %}
+      dernier: "{{ states(dernier_palier) | int(0) }}"
 
   - choose:
-      - conditions: "{{ palier in ['1','2','3'] }}"
+
+      # ───── FERMETURE ─────
+      - conditions:
+          - "{{ soleil_ok }}"
+          - "{{ palier > 0 }}"
+          - "{{ palier != dernier }}"
         sequence:
 
-          # BSO avec retour → position directe
           - service: cover.set_cover_position
             target: !input bso_avec_retour
             data:
-              position: "{{ pos_bso }}"
+              position: "{{ 10 if palier == 3 else 50 if palier == 2 else 75 }}"
 
-          # Volets sans retour → montée + descente minutée (parallèle)
           - parallel:
-            - if:
-                - condition: template
-                  value_template: "{{ volet_baie_sud != '' }}"
-              then:
-                - variables:
-                    volet_baie_sud: !input volet_baie_sud
-                    duree_baie_sud: !input duree_baie_sud
-                - service: cover.open_cover
-                  target:
-                    entity_id: "{{ volet_baie_sud }}"
-                - delay:
-                    seconds: "{{ duree_baie_sud | int }}"
-                - service: cover.close_cover
-                  target:
-                    entity_id: "{{ volet_baie_sud }}"
-                - delay:
-                    seconds: "{{ (duree_baie_sud * ratio) | int }}"
-                - service: cover.stop_cover
-                  target:
-                    entity_id: "{{ volet_baie_sud }}"
 
-            - if:
-                - condition: template
-                  value_template: "{{ volet_panoramique_sud != '' }}"
-              then:
-                - variables:
-                    volet_panoramique_sud: !input volet_panoramique_sud
-                    duree_panoramique_sud: !input duree_panoramique_sud
-                - service: cover.open_cover
-                  target:
-                    entity_id: "{{ volet_panoramique_sud }}"
-                - delay:
-                    seconds: "{{ duree_panoramique_sud | int }}"
-                - service: cover.close_cover
-                  target:
-                    entity_id: "{{ volet_panoramique_sud }}"
-                - delay:
-                    seconds: "{{ (duree_panoramique_sud * ratio) | int }}"
-                - service: cover.stop_cover
-                  target:
-                    entity_id: "{{ volet_panoramique_sud }}"
+              - if: "{{ !input volet_baie_sud != '' }}"
+                then:
+                  - service: cover.open_cover
+                    target: { entity_id: !input volet_baie_sud }
+                  - delay: { seconds: !input duree_baie_sud }
+                  - service: cover.close_cover
+                    target: { entity_id: !input volet_baie_sud }
+                  - delay:
+                      seconds: "{{ ( !input duree_baie_sud * ratio ) | int }}"
+                  - service: cover.stop_cover
+                    target: { entity_id: !input volet_baie_sud }
 
-            - if:
-                - condition: template
-                  value_template: "{{ volet_baie_ouest != '' }}"
-              then:
-                - variables:
-                    volet_baie_ouest: !input volet_baie_ouest
-                    duree_baie_ouest: !input duree_baie_ouest
-                - service: cover.open_cover
-                  target:
-                    entity_id: "{{ volet_baie_ouest }}"
-                - delay:
-                    seconds: "{{ duree_baie_ouest | int }}"
-                - service: cover.close_cover
-                  target:
-                    entity_id: "{{ volet_baie_ouest }}"
-                - delay:
-                    seconds: "{{ (duree_baie_ouest * ratio) | int }}"
-                - service: cover.stop_cover
-                  target:
-                    entity_id: "{{ volet_baie_ouest }}"
+              - if: "{{ !input volet_panoramique_sud != '' }}"
+                then:
+                  - service: cover.open_cover
+                    target: { entity_id: !input volet_panoramique_sud }
+                  - delay: { seconds: !input duree_panoramique_sud }
+                  - service: cover.close_cover
+                    target: { entity_id: !input volet_panoramique_sud }
+                  - delay:
+                      seconds: "{{ ( !input duree_panoramique_sud * ratio ) | int }}"
+                  - service: cover.stop_cover
+                    target: { entity_id: !input volet_panoramique_sud }
 
-            - if:
-                - condition: template
-                  value_template: "{{ volet_panoramique_ouest != '' }}"
-              then:
-                - variables:
-                    volet_panoramique_ouest: !input volet_panoramique_ouest
-                    duree_panoramique_ouest: !input duree_panoramique_ouest
-                - service: cover.open_cover
-                  target:
-                    entity_id: "{{ volet_panoramique_ouest }}"
-                - delay:
-                    seconds: "{{ duree_panoramique_ouest | int }}"
-                - service: cover.close_cover
-                  target:
-                    entity_id: "{{ volet_panoramique_ouest }}"
-                - delay:
-                    seconds: "{{ (duree_panoramique_ouest * ratio) | int }}"
-                - service: cover.stop_cover
-                  target:
-                    entity_id: "{{ volet_panoramique_ouest }}"
+          - service: input_number.set_value
+            target:
+              entity_id: !input dernier_palier
+            data:
+              value: "{{ palier }}"
 
-mode: single
-max_exceeded: silent
+      # ───── OUVERTURE SOIR ─────
+      - conditions:
+          - "{{ elevation < 3 }}"
+          - "{{ dernier != 0 }}"
+        sequence:
+          - service: cover.open_cover
+            target: !input bso_avec_retour
+
+          - service: input_number.set_value
+            target:
+              entity_id: !input dernier_palier
+            data:
+              value: 0
