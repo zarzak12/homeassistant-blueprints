@@ -27,11 +27,12 @@ blueprint:
 
     # ───── BSO (avec retour) ─────
     bso_avec_retour:
-      name: BSO avec retour de position
+      name: "BSO / Volets avec retour de position"
+      description: "Vos BSO Somfy IO (retour d'info disponible)"
       selector:
-        entity:
-          domain: cover
-          multiple: true
+        target:
+          entity:
+            domain: cover
 
     # ───── Volets sans retour ─────
     volet_baie_sud:
