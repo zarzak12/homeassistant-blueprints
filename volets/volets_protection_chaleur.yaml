@@ -227,26 +227,26 @@ action:
               - if: "{{ volet_baie_sud != '' }}"
                 then:
                   - service: cover.open_cover
-                    target: { entity_id: !input volet_baie_sud }
-                  - delay: { seconds: !input duree_baie_sud }
+                    target: { entity_id: volet_baie_sud }
+                  - delay: { seconds: duree_baie_sud }
                   - service: cover.close_cover
-                    target: { entity_id: !input volet_baie_sud }
+                    target: { entity_id: volet_baie_sud }
                   - delay:
                       seconds: "{{ ( duree_baie_sud * ratio ) | int }}"
                   - service: cover.stop_cover
-                    target: { entity_id: !input volet_baie_sud }
+                    target: { entity_id: volet_baie_sud }
 
               - if: "{{ volet_panoramique_sud != '' }}"
                 then:
                   - service: cover.open_cover
-                    target: { entity_id: !input volet_panoramique_sud }
-                  - delay: { seconds: !input duree_panoramique_sud }
+                    target: { entity_id: volet_panoramique_sud }
+                  - delay: { seconds: duree_panoramique_sud }
                   - service: cover.close_cover
-                    target: { entity_id: !input volet_panoramique_sud }
+                    target: { entity_id: volet_panoramique_sud }
                   - delay:
                       seconds: "{{ ( duree_panoramique_sud * ratio ) | int }}"
                   - service: cover.stop_cover
-                    target: { entity_id: !input volet_panoramique_sud }
+                    target: { entity_id: volet_panoramique_sud }
 
           - service: input_number.set_value
             target:
