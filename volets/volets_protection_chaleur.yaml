@@ -401,8 +401,8 @@ condition:
   - condition: template
     value_template: >
       {% set azimut = state_attr('sun.sun', 'azimuth') | float(0) %}
-      {{ azimut > (blueprint.input.azimut_min | default(90))
-         and azimut < (blueprint.input.azimut_max | default(270)) }}
+      {{ azimut > (azimut_min | default(90))
+         and azimut < (azimut_max | default(270)) }}
 
 # ── Action principale ─────────────────────────────────────────
 action:
