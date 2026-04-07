@@ -408,10 +408,10 @@ condition:
 action:
   - variables:
       saison: !input saison_active
-      temp_ext: "{{ states(capteur_temp_ext) | float(0) }}"
-      temp_int: "{{ states(capteur_temp_int) | float(0) }}"
       capteur_temp_ext: !input capteur_temp_ext
       capteur_temp_int: !input capteur_temp_int
+      temp_ext: "{{ states(capteur_temp_ext) | float(0) }}"
+      temp_int: "{{ states(capteur_temp_int) | float(0) }}"      
 
       s1_ext: "{{ expand(input)[saison ~ '_ext_p1'] | default(99) | float }}"
       s2_ext: "{{ expand(input)[saison ~ '_ext_p2'] | default(99) | float }}"
