@@ -147,6 +147,11 @@ mode: restart
 action:
 
   - variables:
+      volet_baie_sud: !input volet_baie_sud 
+      duree_baie_sud: !input duree_baie_sud
+      volet_panoramique_sud: !input volet_panoramique_sud
+      duree_panoramique_sud: !input duree_panoramique_sud
+      
       capteur_temp_ext: !input capteur_temp_ext
       capteur_temp_int: !input capteur_temp_int
       azimut_min: !input azimut_min
@@ -219,7 +224,7 @@ action:
 
           - parallel:
 
-              - if: "{{ !input volet_baie_sud != '' }}"
+              - if: "{{ volet_baie_sud != '' }}"
                 then:
                   - service: cover.open_cover
                     target: { entity_id: !input volet_baie_sud }
@@ -227,11 +232,11 @@ action:
                   - service: cover.close_cover
                     target: { entity_id: !input volet_baie_sud }
                   - delay:
-                      seconds: "{{ ( !input duree_baie_sud * ratio ) | int }}"
+                      seconds: "{{ ( duree_baie_sud * ratio ) | int }}"
                   - service: cover.stop_cover
                     target: { entity_id: !input volet_baie_sud }
 
-              - if: "{{ !input volet_panoramique_sud != '' }}"
+              - if: "{{ volet_panoramique_sud != '' }}"
                 then:
                   - service: cover.open_cover
                     target: { entity_id: !input volet_panoramique_sud }
@@ -239,7 +244,7 @@ action:
                   - service: cover.close_cover
                     target: { entity_id: !input volet_panoramique_sud }
                   - delay:
-                      seconds: "{{ ( !input duree_panoramique_sud * ratio ) | int }}"
+                      seconds: "{{ ( duree_panoramique_sud * ratio ) | int }}"
                   - service: cover.stop_cover
                     target: { entity_id: !input volet_panoramique_sud }
 
