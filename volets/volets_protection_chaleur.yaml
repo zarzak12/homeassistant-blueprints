@@ -211,7 +211,7 @@ action:
         sequence:
 
           - service: cover.set_cover_position
-            target: !input bso_avec_retour
+            entity_id: !input bso_avec_retour
             data:
               position: "{{ 10 if palier == 3 else 50 if palier == 2 else 75 }}"
 
