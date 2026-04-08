@@ -4,7 +4,7 @@ blueprint:
     Ferme progressivement les volets selon la température extérieure et
     intérieure, la position du soleil et la période de l'année (chaude ou froide).
     Gère séparément les BSO avec retour de position et les volets sans retour
-    pilotés par minuterie (montée complète + descente chronométrée).
+    pilotés par minuterie. Notifie sur mobile uniquement en cas de changement de palier.
   domain: automation
   author: "Home Assistant Blueprint"
 
@@ -25,6 +25,24 @@ blueprint:
         entity:
           domain: sensor
           device_class: temperature
+
+    # ── Mémorisation du palier précédent ──────────────────────
+    palier_precedent:
+      name: "Helper - Palier précédent"
+      description: >
+        Créez un input_number (min 0, max 3, step 1) pour mémoriser
+        le dernier palier appliqué. Ex: input_number.palier_volets_precedent
+      selector:
+        entity:
+          domain: input_number
+
+    # ── Notification mobile ───────────────────────────────────
+    service_notification:
+      name: "Service de notification mobile"
+      description: "Ex: notify.mobile_app_mon_telephone"
+      selector:
+        text:
+      default: "notify.mobile_app_mon_telephone"
 
     # ── BSO avec retour de position ───────────────────────────
     bso_avec_retour:
@@ -271,7 +289,6 @@ trigger:
       - !input capteur_temp_int
       - sun.sun
 
-# ── Pas de condition au niveau racine ─────────────────────────
 condition: []
 
 # ── Action principale ─────────────────────────────────────────
@@ -282,8 +299,11 @@ action:
       periode: !input periode_active
       az_min: !input azimut_min
       az_max: !input azimut_max
+      palier_precedent: !input palier_precedent
+      service_notification: !input service_notification
       temp_ext: "{{ states(capteur_temp_ext) | float(0) }}"
       temp_int: "{{ states(capteur_temp_int) | float(0) }}"
+      azimut: "{{ state_attr('sun.sun', 'azimuth') | float(0) }}"
       chaude_ext_p1: !input chaude_ext_p1
       chaude_ext_p2: !input chaude_ext_p2
       chaude_ext_p3: !input chaude_ext_p3
@@ -319,6 +339,10 @@ action:
         {% else %} 0
         {% endif %}
 
+      palier_num: "{{ palier | int }}"
+
+      ancien_palier: "{{ states(palier_precedent) | int(-1) }}"
+
       pos_bso: >
         {% if palier == '3' %} 10
         {% elif palier == '2' %} 50
@@ -333,12 +357,31 @@ action:
         {% else %} 0
         {% endif %}
 
-  # ── Condition azimut vérifiée dans l'action ────────────────
+      label_palier: >
+        {% if palier == '3' %} 🔴 Palier 3 — fermeture 90%
+        {% elif palier == '2' %} 🟠 Palier 2 — fermeture 50%
+        {% elif palier == '1' %} 🟡 Palier 1 — fermeture 25%
+        {% else %} 🟢 Palier 0 — aucune action
+        {% endif %}
+
+      label_ancien_palier: >
+        {% if ancien_palier == 3 %} 🔴 Palier 3 — fermeture 90%
+        {% elif ancien_palier == 2 %} 🟠 Palier 2 — fermeture 50%
+        {% elif ancien_palier == 1 %} 🟡 Palier 1 — fermeture 25%
+        {% elif ancien_palier == 0 %} 🟢 Palier 0 — aucune action
+        {% else %} ❓ Inconnu
+        {% endif %}
+
+  # ── Condition azimut ───────────────────────────────────────
   - condition: template
     value_template: >
-      {% set azimut = state_attr('sun.sun', 'azimuth') | float(0) %}
       {{ azimut > az_min | float(90) and azimut < az_max | float(270) }}
 
+  # ── On agit seulement si le palier a changé ────────────────
+  - condition: template
+    value_template: "{{ palier_num != ancien_palier }}"
+
+  # ── Application du palier ──────────────────────────────────
   - choose:
       - conditions: "{{ palier in ['1','2','3'] }}"
         sequence:
@@ -426,6 +469,25 @@ action:
 
       - conditions: "{{ palier == '0' }}"
         sequence: []
+
+  # ── Mémorisation du nouveau palier ────────────────────────
+  - service: input_number.set_value
+    target:
+      entity_id: "{{ palier_precedent }}"
+    data:
+      value: "{{ palier_num }}"
+
+  # ── Notification mobile ────────────────────────────────────
+  - service: "{{ service_notification }}"
+    data:
+      title: "🪟 Volets — Changement de palier"
+      message: >
+        {{ label_ancien_palier }} → {{ label_palier }}
+
+        🌡️ Ext : {{ temp_ext }}°C  |  Int : {{ temp_int }}°C
+        ☀️ Azimut soleil : {{ azimut | round(1) }}°
+        📅 Période : {{ 'Chaude' if periode == 'chaude' else 'Froide' }}
+        🕐 {{ now().strftime('%H:%M') }}
 
 mode: single
 max_exceeded: silent
