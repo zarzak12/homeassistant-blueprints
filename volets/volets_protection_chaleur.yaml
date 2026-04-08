@@ -37,7 +37,7 @@ blueprint:
 
     # ── Volets sans retour ────────────────────────────────────
     volet_1:
-      name: "Volet sans retour n°1 (ex: baie vitrée sud)"
+      name: "Volet sans retour n°1"
       selector:
         entity:
           domain: cover
@@ -54,7 +54,7 @@ blueprint:
       default: 30
 
     volet_2:
-      name: "Volet sans retour n°2 (ex: panoramique sud)"
+      name: "Volet sans retour n°2"
       selector:
         entity:
           domain: cover
@@ -71,7 +71,7 @@ blueprint:
       default: 30
 
     volet_3:
-      name: "Volet sans retour n°3 (ex: baie vitrée ouest)"
+      name: "Volet sans retour n°3"
       selector:
         entity:
           domain: cover
@@ -88,7 +88,7 @@ blueprint:
       default: 30
 
     volet_4:
-      name: "Volet sans retour n°4 (ex: panoramique ouest)"
+      name: "Volet sans retour n°4"
       selector:
         entity:
           domain: cover
@@ -130,7 +130,6 @@ blueprint:
     # ── Période active ────────────────────────────────────────
     periode_active:
       name: "Période active"
-      description: "Choisissez la période pour appliquer les bons seuils"
       selector:
         select:
           options:
@@ -142,8 +141,7 @@ blueprint:
 
     # ── Seuils période CHAUDE ─────────────────────────────────
     chaude_ext_p1:
-      name: "🌞 Chaude - Palier 1 température ext (°C)"
-      description: "Fermeture légère (25%)"
+      name: "🌞 Chaude - Palier 1 temp ext (°C) — fermeture 25%"
       selector:
         number:
           min: 10
@@ -153,8 +151,7 @@ blueprint:
       default: 25
 
     chaude_ext_p2:
-      name: "🌞 Chaude - Palier 2 température ext (°C)"
-      description: "Fermeture mi-chemin (50%)"
+      name: "🌞 Chaude - Palier 2 temp ext (°C) — fermeture 50%"
       selector:
         number:
           min: 10
@@ -164,8 +161,7 @@ blueprint:
       default: 29
 
     chaude_ext_p3:
-      name: "🌞 Chaude - Palier 3 température ext (°C)"
-      description: "Fermeture quasi-totale (90%)"
+      name: "🌞 Chaude - Palier 3 temp ext (°C) — fermeture 90%"
       selector:
         number:
           min: 10
@@ -175,8 +171,7 @@ blueprint:
       default: 33
 
     chaude_int_p1:
-      name: "🌞 Chaude - Palier 1 température int (°C)"
-      description: "Fermeture légère (25%)"
+      name: "🌞 Chaude - Palier 1 temp int (°C) — fermeture 25%"
       selector:
         number:
           min: 15
@@ -186,8 +181,7 @@ blueprint:
       default: 24
 
     chaude_int_p2:
-      name: "🌞 Chaude - Palier 2 température int (°C)"
-      description: "Fermeture mi-chemin (50%)"
+      name: "🌞 Chaude - Palier 2 temp int (°C) — fermeture 50%"
       selector:
         number:
           min: 15
@@ -197,8 +191,7 @@ blueprint:
       default: 27
 
     chaude_int_p3:
-      name: "🌞 Chaude - Palier 3 température int (°C)"
-      description: "Fermeture quasi-totale (90%)"
+      name: "🌞 Chaude - Palier 3 temp int (°C) — fermeture 90%"
       selector:
         number:
           min: 15
@@ -209,8 +202,7 @@ blueprint:
 
     # ── Seuils période FROIDE ─────────────────────────────────
     froide_ext_p1:
-      name: "🌨️ Froide - Palier 1 température ext (°C)"
-      description: "Fermeture légère (25%)"
+      name: "🌨️ Froide - Palier 1 temp ext (°C) — fermeture 25%"
       selector:
         number:
           min: 5
@@ -220,8 +212,7 @@ blueprint:
       default: 14
 
     froide_ext_p2:
-      name: "🌨️ Froide - Palier 2 température ext (°C)"
-      description: "Fermeture mi-chemin (50%)"
+      name: "🌨️ Froide - Palier 2 temp ext (°C) — fermeture 50%"
       selector:
         number:
           min: 5
@@ -231,8 +222,7 @@ blueprint:
       default: 18
 
     froide_ext_p3:
-      name: "🌨️ Froide - Palier 3 température ext (°C)"
-      description: "Fermeture quasi-totale (90%)"
+      name: "🌨️ Froide - Palier 3 temp ext (°C) — fermeture 90%"
       selector:
         number:
           min: 5
@@ -242,8 +232,7 @@ blueprint:
       default: 22
 
     froide_int_p1:
-      name: "🌨️ Froide - Palier 1 température int (°C)"
-      description: "Fermeture légère (25%)"
+      name: "🌨️ Froide - Palier 1 temp int (°C) — fermeture 25%"
       selector:
         number:
           min: 15
@@ -253,8 +242,7 @@ blueprint:
       default: 19
 
     froide_int_p2:
-      name: "🌨️ Froide - Palier 2 température int (°C)"
-      description: "Fermeture mi-chemin (50%)"
+      name: "🌨️ Froide - Palier 2 temp int (°C) — fermeture 50%"
       selector:
         number:
           min: 15
@@ -264,8 +252,7 @@ blueprint:
       default: 22
 
     froide_int_p3:
-      name: "🌨️ Froide - Palier 3 température int (°C)"
-      description: "Fermeture quasi-totale (90%)"
+      name: "🌨️ Froide - Palier 3 temp int (°C) — fermeture 90%"
       selector:
         number:
           min: 15
@@ -284,17 +271,8 @@ trigger:
       - !input capteur_temp_int
       - sun.sun
 
-# ── Condition soleil côté sud ─────────────────────────────────
-condition:
-  - condition: template
-    value_template: >
-      {% set azimut = state_attr('sun.sun', 'azimuth') | float(0) %}
-      {% set az_min = azimut_min | float(90) %}
-      {% set az_max = azimut_max | float(270) %}
-      {{ azimut > az_min and azimut < az_max }}
-    variables:
-      azimut_min: !input azimut_min
-      azimut_max: !input azimut_max
+# ── Pas de condition au niveau racine ─────────────────────────
+condition: []
 
 # ── Action principale ─────────────────────────────────────────
 action:
@@ -302,10 +280,10 @@ action:
       capteur_temp_ext: !input capteur_temp_ext
       capteur_temp_int: !input capteur_temp_int
       periode: !input periode_active
+      az_min: !input azimut_min
+      az_max: !input azimut_max
       temp_ext: "{{ states(capteur_temp_ext) | float(0) }}"
       temp_int: "{{ states(capteur_temp_int) | float(0) }}"
-
-      # Seuils selon période
       chaude_ext_p1: !input chaude_ext_p1
       chaude_ext_p2: !input chaude_ext_p2
       chaude_ext_p3: !input chaude_ext_p3
@@ -318,6 +296,14 @@ action:
       froide_int_p1: !input froide_int_p1
       froide_int_p2: !input froide_int_p2
       froide_int_p3: !input froide_int_p3
+      volet_1: !input volet_1
+      duree_volet_1: !input duree_volet_1
+      volet_2: !input volet_2
+      duree_volet_2: !input duree_volet_2
+      volet_3: !input volet_3
+      duree_volet_3: !input duree_volet_3
+      volet_4: !input volet_4
+      duree_volet_4: !input duree_volet_4
 
       s1e: "{{ chaude_ext_p1 if periode == 'chaude' else froide_ext_p1 }}"
       s2e: "{{ chaude_ext_p2 if periode == 'chaude' else froide_ext_p2 }}"
@@ -347,26 +333,23 @@ action:
         {% else %} 0
         {% endif %}
 
-      volet_1: !input volet_1
-      duree_volet_1: !input duree_volet_1
-      volet_2: !input volet_2
-      duree_volet_2: !input duree_volet_2
-      volet_3: !input volet_3
-      duree_volet_3: !input duree_volet_3
-      volet_4: !input volet_4
-      duree_volet_4: !input duree_volet_4
+  # ── Condition azimut vérifiée dans l'action ────────────────
+  - condition: template
+    value_template: >
+      {% set azimut = state_attr('sun.sun', 'azimuth') | float(0) %}
+      {{ azimut > az_min | float(90) and azimut < az_max | float(270) }}
 
   - choose:
       - conditions: "{{ palier in ['1','2','3'] }}"
         sequence:
 
-          # ── BSO avec retour → position directe ──────────────
+          # BSO avec retour → position directe
           - service: cover.set_cover_position
             target: !input bso_avec_retour
             data:
               position: "{{ pos_bso }}"
 
-          # ── Volets sans retour → minuterie en parallèle ──────
+          # Volets sans retour → minuterie en parallèle
           - parallel:
 
             - if:
@@ -441,7 +424,6 @@ action:
                   target:
                     entity_id: "{{ volet_4 }}"
 
-      # Palier 0 → aucune action
       - conditions: "{{ palier == '0' }}"
         sequence: []
 
