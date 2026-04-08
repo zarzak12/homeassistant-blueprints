@@ -334,9 +334,9 @@ action:
       ancien_palier: "{{ states(palier_precedent) | int(-1) }}"
 
       pos_bso: >
-        {% if palier == '3' %} 10
+        {% if palier == '3' %} 0
         {% elif palier == '2' %} 50
-        {% elif palier == '1' %} 75
+        {% elif palier == '1' %} 100
         {% else %} -1
         {% endif %}
 
@@ -380,7 +380,19 @@ action:
           - action: cover.set_cover_position
             target: !input bso_avec_retour
             data:
-              position: "{{ pos_bso }}"
+              position: 0  # 100% descendu (HA inverse : 0 = complètement fermé)
+
+          - delay:
+              seconds: 30  # Petite pause pour laisser le store finir de descendre
+
+          - action: cover.set_cover_tilt_position
+            target: !input bso_avec_retour
+            data:
+              tilt_position: >
+                {% if palier == '3' %} 0
+                {% elif palier == '2' %} 50
+                {% else %} 100
+                {% endif %}
 
           # Volets sans retour → minuterie en parallèle
           - parallel:
