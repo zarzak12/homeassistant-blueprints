@@ -40,9 +40,10 @@ blueprint:
     service_notification:
       name: "Service de notification mobile"
       description: "Ex: notify.mobile_app_mon_telephone"
+      default: false
       selector:
-        text:
-      default: "notify.mobile_app_mon_telephone"
+        device:
+          integration: mobile_app
 
     # ── BSO avec retour de position ───────────────────────────
     bso_avec_retour:
