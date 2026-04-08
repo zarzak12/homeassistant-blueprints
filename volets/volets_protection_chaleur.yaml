@@ -352,16 +352,16 @@ action:
       ancien_palier: "{{ states(palier_precedent) | int(-1) }}"
 
       ratio: >
-        {% if palier == '3' %} 0.90
-        {% elif palier == '2' %} 0.50
-        {% elif palier == '1' %} 0.25
+        {% if palier_num == 3 %} 0.90
+        {% elif palier_num == 2 %} 0.50
+        {% elif palier_num == 1 %} 0.25
         {% else %} 0
         {% endif %}
 
       label_palier: >
-        {% if palier == '3' %} 🔴 Palier 3 — fermeture 90%
-        {% elif palier == '2' %} 🟠 Palier 2 — fermeture 50%
-        {% elif palier == '1' %} 🟡 Palier 1 — fermeture 25%
+        {% if palier_num == 3 %} 🔴 Palier 3 — fermeture 90%
+        {% elif palier_num == 2 %} 🟠 Palier 2 — fermeture 50%
+        {% elif palier_num == 1 %} 🟡 Palier 1 — fermeture 25%
         {% else %} 🟢 Palier 0 — aucune action
         {% endif %}
 
