@@ -479,21 +479,17 @@ action:
       value: "{{ palier_num }}"
 
   # ── Notification mobile ────────────────────────────────────
-  - variables:
-      notify_service: >
-        {{ 'notify.mobile_app_' ~ device_attr(service_notification, 'name')
-           | lower | replace(' ', '_') }}
+  - device_id: !input service_notification
+    domain: mobile_app
+    type: notify
+    title: "🪟 Volets — Changement de palier"
+    message: >
+      {{ label_ancien_palier }} → {{ label_palier }}
 
-  - service: "{{ notify_service }}"
-    data:
-      title: "🪟 Volets — Changement de palier"
-      message: >
-        {{ label_ancien_palier }} → {{ label_palier }}
-
-        🌡️ Ext : {{ temp_ext }}°C  |  Int : {{ temp_int }}°C
-        ☀️ Azimut soleil : {{ azimut | round(1) }}°
-        📅 Période : {{ 'Chaude' if periode == 'chaude' else 'Froide' }}
-        🕐 {{ now().strftime('%H:%M') }}
+      🌡️ Ext : {{ temp_ext }}°C  |  Int : {{ temp_int }}°C
+      ☀️ Azimut soleil : {{ azimut | round(1) }}°
+      📅 Période : {{ 'Chaude' if periode == 'chaude' else 'Froide' }}
+      🕐 {{ now().strftime('%H:%M') }}
 
 mode: single
 max_exceeded: silent
