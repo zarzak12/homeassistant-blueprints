@@ -5,6 +5,7 @@ blueprint:
     intérieure, la position du soleil et la période de l'année (chaude ou froide).
     Gère séparément les BSO avec retour de position et les volets sans retour
     pilotés par minuterie. Notifie sur mobile uniquement en cas de changement de palier.
+    Réouvre automatiquement les volets quand le soleil sort de la zone sud/ouest.
   domain: automation
   author: "Home Assistant Blueprint"
 
@@ -115,6 +116,18 @@ blueprint:
           min: 5
           max: 120
           step: 1
+          unit_of_measurement: s
+      default: 30
+
+    # ── Délai entre réouverture sud et ouest ──────────────────
+    delai_reouverture:
+      name: "Délai entre réouverture volets sud et ouest (secondes)"
+      description: "Temps d'attente entre la montée des volets sud et des volets ouest"
+      selector:
+        number:
+          min: 0
+          max: 300
+          step: 5
           unit_of_measurement: s
       default: 30
 
@@ -286,18 +299,20 @@ condition: []
 # ── Action principale ─────────────────────────────────────────
 action:
   - variables:
-      azimut_ouest: 180
-      soleil_sud: "{{ azimut > az_min and azimut <= azimut_ouest }}"
-      soleil_ouest: "{{ azimut > azimut_ouest and azimut < az_max }}"
       capteur_temp_ext: !input capteur_temp_ext
       capteur_temp_int: !input capteur_temp_int
       periode: !input periode_active
       az_min: !input azimut_min
       az_max: !input azimut_max
       palier_precedent: !input palier_precedent
+      delai_reouverture: !input delai_reouverture
       temp_ext: "{{ states(capteur_temp_ext) | float(0) }}"
       temp_int: "{{ states(capteur_temp_int) | float(0) }}"
       azimut: "{{ state_attr('sun.sun', 'azimuth') | float(0) }}"
+      azimut_ouest: 180
+      soleil_actif: "{{ azimut > az_min and azimut < az_max }}"
+      soleil_sud: "{{ azimut > az_min and azimut <= 180 }}"
+      soleil_ouest: "{{ azimut > 180 and azimut < az_max }}"
       chaude_ext_p1: !input chaude_ext_p1
       chaude_ext_p2: !input chaude_ext_p2
       chaude_ext_p3: !input chaude_ext_p3
@@ -336,13 +351,6 @@ action:
       palier_num: "{{ palier | int }}"
       ancien_palier: "{{ states(palier_precedent) | int(-1) }}"
 
-      pos_bso: >
-        {% if palier == '3' %} 0
-        {% elif palier == '2' %} 50
-        {% elif palier == '1' %} 100
-        {% else %} -1
-        {% endif %}
-
       ratio: >
         {% if palier == '3' %} 0.90
         {% elif palier == '2' %} 0.50
@@ -365,135 +373,218 @@ action:
         {% else %} ❓ Inconnu
         {% endif %}
 
-  # ── Condition azimut ───────────────────────────────────────
-  - condition: template
-    value_template: >
-      {{ azimut > az_min | float(90) and azimut < az_max | float(270) }}
-
-  # ── On agit seulement si le palier a changé ────────────────
-  - condition: template
-    value_template: "{{ palier_num != ancien_palier }}"
-
-  # ── Application du palier ──────────────────────────────────
+  # ── Choix du scénario : soleil actif ou fin de journée ─────
   - choose:
-      - conditions: "{{ palier in ['1','2','3'] }}"
+
+      # ═══════════════════════════════════════════════════════
+      # CAS 1 : Soleil hors zone → réouverture fin de journée
+      # Déclenché seulement si les volets avaient été fermés
+      # ═══════════════════════════════════════════════════════
+      - conditions:
+          - condition: template
+            value_template: "{{ not soleil_actif and ancien_palier > 0 }}"
         sequence:
 
-          # BSO avec retour → position directe
+          # BSO → remontée complète + lames horizontales
           - action: cover.set_cover_position
             target: !input bso_avec_retour
             data:
-              position: 0  # 100% descendu (HA inverse : 0 = complètement fermé)
+              position: 100
 
           - delay:
-              seconds: 30  # Petite pause pour laisser le store finir de descendre
+              seconds: 5
 
           - action: cover.set_cover_tilt_position
             target: !input bso_avec_retour
             data:
-              tilt_position: >
-                {% if palier == '3' %} 0
-                {% elif palier == '2' %} 50
-                {% else %} 100
-                {% endif %}
+              tilt_position: 50  # Lames horizontales
 
-          # Volets sans retour → minuterie en parallèle
+          # Volets sud en premier
           - parallel:
-
             - if:
                 - condition: template
-                  value_template: "{{ volet_1 != '' and soleil_sud }}"
+                  value_template: "{{ volet_1 != '' }}"
               then:
                 - action: cover.open_cover
-                  target:
-                    entity_id: "{{ volet_1 }}"
-                - delay:
-                    seconds: "{{ duree_volet_1 | int }}"
-                - action: cover.close_cover
-                  target:
-                    entity_id: "{{ volet_1 }}"
-                - delay:
-                    seconds: "{{ (duree_volet_1 | float * ratio | float) | int }}"
-                - action: cover.stop_cover
                   target:
                     entity_id: "{{ volet_1 }}"
 
             - if:
                 - condition: template
-                  value_template: "{{ volet_2 != '' and soleil_sud }}"
+                  value_template: "{{ volet_2 != '' }}"
               then:
                 - action: cover.open_cover
-                  target:
-                    entity_id: "{{ volet_2 }}"
-                - delay:
-                    seconds: "{{ duree_volet_2 | int }}"
-                - action: cover.close_cover
-                  target:
-                    entity_id: "{{ volet_2 }}"
-                - delay:
-                    seconds: "{{ (duree_volet_2 | float * ratio | float) | int }}"
-                - action: cover.stop_cover
                   target:
                     entity_id: "{{ volet_2 }}"
 
+          # Délai avant volets ouest
+          - delay:
+              seconds: "{{ delai_reouverture | int }}"
+
+          # Volets ouest ensuite
+          - parallel:
             - if:
                 - condition: template
-                  value_template: "{{ volet_3 != '' and soleil_ouest }}"
+                  value_template: "{{ volet_3 != '' }}"
               then:
                 - action: cover.open_cover
-                  target:
-                    entity_id: "{{ volet_3 }}"
-                - delay:
-                    seconds: "{{ duree_volet_3 | int }}"
-                - action: cover.close_cover
-                  target:
-                    entity_id: "{{ volet_3 }}"
-                - delay:
-                    seconds: "{{ (duree_volet_3 | float * ratio | float) | int }}"
-                - action: cover.stop_cover
                   target:
                     entity_id: "{{ volet_3 }}"
 
             - if:
                 - condition: template
-                  value_template: "{{ volet_4 != '' and soleil_ouest }}"
+                  value_template: "{{ volet_4 != '' }}"
               then:
                 - action: cover.open_cover
                   target:
                     entity_id: "{{ volet_4 }}"
-                - delay:
-                    seconds: "{{ duree_volet_4 | int }}"
-                - action: cover.close_cover
-                  target:
-                    entity_id: "{{ volet_4 }}"
-                - delay:
-                    seconds: "{{ (duree_volet_4 | float * ratio | float) | int }}"
-                - action: cover.stop_cover
-                  target:
-                    entity_id: "{{ volet_4 }}"
 
-      - conditions: "{{ palier == '0' }}"
-        sequence: []
+          # Remise à zéro du palier mémorisé
+          - action: input_number.set_value
+            target:
+              entity_id: "{{ palier_precedent }}"
+            data:
+              value: 0
 
-  # ── Mémorisation du nouveau palier ────────────────────────
-  - action: input_number.set_value
-    target:
-      entity_id: "{{ palier_precedent }}"
-    data:
-      value: "{{ palier_num }}"
+          # Notification réouverture
+          - device_id: !input service_notification
+            domain: mobile_app
+            type: notify
+            title: "🪟 Volets — Réouverture fin de journée"
+            message: >
+              ☀️ Soleil sorti de la zone (azimut {{ azimut | round(1) }}°)
+              Volets sud remontés, puis volets ouest.
 
-  # ── Notification mobile ────────────────────────────────────
-  - device_id: !input service_notification
-    domain: mobile_app
-    type: notify
-    title: "🪟 Volets — Changement de palier"
-    message: >
-      {{ label_ancien_palier }} → {{ label_palier }}
+              🌡️ Ext : {{ temp_ext }}°C  |  Int : {{ temp_int }}°C
+              🕐 {{ now().strftime('%H:%M') }}
 
-      🌡️ Ext : {{ temp_ext }}°C  |  Int : {{ temp_int }}°C
-      ☀️ Azimut soleil : {{ azimut | round(1) }}°
-      📅 Période : {{ 'Chaude' if periode == 'chaude' else 'Froide' }}
-      🕐 {{ now().strftime('%H:%M') }}
+      # ═══════════════════════════════════════════════════════
+      # CAS 2 : Soleil actif → gestion normale par paliers
+      # ═══════════════════════════════════════════════════════
+      - conditions:
+          - condition: template
+            value_template: "{{ soleil_actif and palier_num != ancien_palier }}"
+        sequence:
+
+          - choose:
+              - conditions: "{{ palier in ['1','2','3'] }}"
+                sequence:
+
+                  # BSO → descente complète + inclinaison selon palier
+                  - action: cover.set_cover_position
+                    target: !input bso_avec_retour
+                    data:
+                      position: 0
+
+                  - delay:
+                      seconds: 30
+
+                  - action: cover.set_cover_tilt_position
+                    target: !input bso_avec_retour
+                    data:
+                      tilt_position: >
+                        {% if palier == '3' %} 0
+                        {% elif palier == '2' %} 25
+                        {% else %} 50
+                        {% endif %}
+
+                  # Volets sans retour → minuterie en parallèle
+                  - parallel:
+
+                    - if:
+                        - condition: template
+                          value_template: "{{ volet_1 != '' and soleil_sud }}"
+                      then:
+                        - action: cover.open_cover
+                          target:
+                            entity_id: "{{ volet_1 }}"
+                        - delay:
+                            seconds: "{{ duree_volet_1 | int }}"
+                        - action: cover.close_cover
+                          target:
+                            entity_id: "{{ volet_1 }}"
+                        - delay:
+                            seconds: "{{ (duree_volet_1 | float * ratio | float) | int }}"
+                        - action: cover.stop_cover
+                          target:
+                            entity_id: "{{ volet_1 }}"
+
+                    - if:
+                        - condition: template
+                          value_template: "{{ volet_2 != '' and soleil_sud }}"
+                      then:
+                        - action: cover.open_cover
+                          target:
+                            entity_id: "{{ volet_2 }}"
+                        - delay:
+                            seconds: "{{ duree_volet_2 | int }}"
+                        - action: cover.close_cover
+                          target:
+                            entity_id: "{{ volet_2 }}"
+                        - delay:
+                            seconds: "{{ (duree_volet_2 | float * ratio | float) | int }}"
+                        - action: cover.stop_cover
+                          target:
+                            entity_id: "{{ volet_2 }}"
+
+                    - if:
+                        - condition: template
+                          value_template: "{{ volet_3 != '' and soleil_ouest }}"
+                      then:
+                        - action: cover.open_cover
+                          target:
+                            entity_id: "{{ volet_3 }}"
+                        - delay:
+                            seconds: "{{ duree_volet_3 | int }}"
+                        - action: cover.close_cover
+                          target:
+                            entity_id: "{{ volet_3 }}"
+                        - delay:
+                            seconds: "{{ (duree_volet_3 | float * ratio | float) | int }}"
+                        - action: cover.stop_cover
+                          target:
+                            entity_id: "{{ volet_3 }}"
+
+                    - if:
+                        - condition: template
+                          value_template: "{{ volet_4 != '' and soleil_ouest }}"
+                      then:
+                        - action: cover.open_cover
+                          target:
+                            entity_id: "{{ volet_4 }}"
+                        - delay:
+                            seconds: "{{ duree_volet_4 | int }}"
+                        - action: cover.close_cover
+                          target:
+                            entity_id: "{{ volet_4 }}"
+                        - delay:
+                            seconds: "{{ (duree_volet_4 | float * ratio | float) | int }}"
+                        - action: cover.stop_cover
+                          target:
+                            entity_id: "{{ volet_4 }}"
+
+              - conditions: "{{ palier == '0' }}"
+                sequence: []
+
+          # Mémorisation du nouveau palier
+          - action: input_number.set_value
+            target:
+              entity_id: "{{ palier_precedent }}"
+            data:
+              value: "{{ palier_num }}"
+
+          # Notification changement de palier
+          - device_id: !input service_notification
+            domain: mobile_app
+            type: notify
+            title: "🪟 Volets — Changement de palier"
+            message: >
+              {{ label_ancien_palier }} → {{ label_palier }}
+
+              🌡️ Ext : {{ temp_ext }}°C  |  Int : {{ temp_int }}°C
+              ☀️ Azimut soleil : {{ azimut | round(1) }}°
+              📅 Période : {{ 'Chaude' if periode == 'chaude' else 'Froide' }}
+              🕐 {{ now().strftime('%H:%M') }}
 
 mode: single
 max_exceeded: silent
