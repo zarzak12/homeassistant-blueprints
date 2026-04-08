@@ -479,7 +479,7 @@ action:
       value: "{{ palier_num }}"
 
   # ── Notification mobile ────────────────────────────────────
-  - service: "{{ service_notification }}"
+  - service: !input service_notification
     data:
       title: "🪟 Volets — Changement de palier"
       message: >
