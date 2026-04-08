@@ -479,7 +479,12 @@ action:
       value: "{{ palier_num }}"
 
   # ── Notification mobile ────────────────────────────────────
-  - service: !input service_notification
+  - variables:
+      notify_service: >
+        {{ 'notify.mobile_app_' ~ device_attr(service_notification, 'name')
+           | lower | replace(' ', '_') }}
+
+  - service: "{{ notify_service }}"
     data:
       title: "🪟 Volets — Changement de palier"
       message: >
