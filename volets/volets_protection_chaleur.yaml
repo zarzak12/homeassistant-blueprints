@@ -51,7 +51,7 @@ blueprint:
             domain: cover
 
     volet_1:
-      name: "Volet sans retour n°1"
+      name: "Volet salon sans retour SUD"
       selector:
         entity:
           domain: cover
@@ -68,7 +68,7 @@ blueprint:
       default: 30
 
     volet_2:
-      name: "Volet sans retour n°2"
+      name: "Volet Panoramique sans retour SUD"
       selector:
         entity:
           domain: cover
@@ -85,7 +85,7 @@ blueprint:
       default: 30
 
     volet_3:
-      name: "Volet sans retour n°3"
+      name: "Volet SAM sans retour OUEST"
       selector:
         entity:
           domain: cover
@@ -102,7 +102,7 @@ blueprint:
       default: 30
 
     volet_4:
-      name: "Volet sans retour n°4"
+      name: "Volet Cuisine sans retour OUEST"
       selector:
         entity:
           domain: cover
@@ -286,6 +286,9 @@ condition: []
 # ── Action principale ─────────────────────────────────────────
 action:
   - variables:
+      azimut_ouest: 180
+      soleil_sud: "{{ azimut > az_min and azimut <= azimut_ouest }}"
+      soleil_ouest: "{{ azimut > azimut_ouest and azimut < az_max }}"
       capteur_temp_ext: !input capteur_temp_ext
       capteur_temp_int: !input capteur_temp_int
       periode: !input periode_active
@@ -399,7 +402,7 @@ action:
 
             - if:
                 - condition: template
-                  value_template: "{{ volet_1 != '' }}"
+                  value_template: "{{ volet_1 != '' and soleil_sud }}"
               then:
                 - action: cover.open_cover
                   target:
@@ -417,7 +420,7 @@ action:
 
             - if:
                 - condition: template
-                  value_template: "{{ volet_2 != '' }}"
+                  value_template: "{{ volet_2 != '' and soleil_sud }}"
               then:
                 - action: cover.open_cover
                   target:
@@ -435,7 +438,7 @@ action:
 
             - if:
                 - condition: template
-                  value_template: "{{ volet_3 != '' }}"
+                  value_template: "{{ volet_3 != '' and soleil_ouest }}"
               then:
                 - action: cover.open_cover
                   target:
@@ -453,7 +456,7 @@ action:
 
             - if:
                 - condition: template
-                  value_template: "{{ volet_4 != '' }}"
+                  value_template: "{{ volet_4 != '' and soleil_ouest }}"
               then:
                 - action: cover.open_cover
                   target:
