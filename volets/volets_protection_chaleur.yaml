@@ -389,10 +389,10 @@ action:
           - action: cover.set_cover_position
             target: !input bso_avec_retour
             data:
-              position: 100
+              position: 0
 
           - delay:
-              seconds: 5
+              seconds: 30
 
           - action: cover.set_cover_tilt_position
             target: !input bso_avec_retour
