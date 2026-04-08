@@ -10,7 +10,6 @@ blueprint:
 
   input:
 
-    # ── Capteurs ──────────────────────────────────────────────
     capteur_temp_ext:
       name: "Capteur température extérieure"
       description: "Capteur côté nord"
@@ -26,7 +25,6 @@ blueprint:
           domain: sensor
           device_class: temperature
 
-    # ── Mémorisation du palier précédent ──────────────────────
     palier_precedent:
       name: "Helper - Palier précédent"
       description: >
@@ -36,16 +34,14 @@ blueprint:
         entity:
           domain: input_number
 
-    # ── Notification mobile ───────────────────────────────────
     service_notification:
-      name: "Service de notification mobile"
-      description: "Ex: notify.mobile_app_mon_telephone"
+      name: "Appareil de notification mobile"
+      description: "Sélectionnez votre téléphone (application mobile Home Assistant)"
       default: false
       selector:
         device:
           integration: mobile_app
 
-    # ── BSO avec retour de position ───────────────────────────
     bso_avec_retour:
       name: "BSO / Volets avec retour de position"
       description: "Vos BSO Somfy IO — position envoyée directement"
@@ -54,7 +50,6 @@ blueprint:
           entity:
             domain: cover
 
-    # ── Volets sans retour ────────────────────────────────────
     volet_1:
       name: "Volet sans retour n°1"
       selector:
@@ -123,7 +118,6 @@ blueprint:
           unit_of_measurement: s
       default: 30
 
-    # ── Soleil ────────────────────────────────────────────────
     azimut_min:
       name: "Azimut minimum d'activation (°)"
       description: "Le soleil doit dépasser cet angle (côté est). Défaut : 90°"
@@ -146,7 +140,6 @@ blueprint:
           unit_of_measurement: "°"
       default: 270
 
-    # ── Période active ────────────────────────────────────────
     periode_active:
       name: "Période active"
       selector:
@@ -158,7 +151,6 @@ blueprint:
               value: "froide"
       default: "chaude"
 
-    # ── Seuils période CHAUDE ─────────────────────────────────
     chaude_ext_p1:
       name: "🌞 Chaude - Palier 1 temp ext (°C) — fermeture 25%"
       selector:
@@ -219,7 +211,6 @@ blueprint:
           unit_of_measurement: "°C"
       default: 30
 
-    # ── Seuils période FROIDE ─────────────────────────────────
     froide_ext_p1:
       name: "🌨️ Froide - Palier 1 temp ext (°C) — fermeture 25%"
       selector:
@@ -301,7 +292,6 @@ action:
       az_min: !input azimut_min
       az_max: !input azimut_max
       palier_precedent: !input palier_precedent
-      service_notification: !input service_notification
       temp_ext: "{{ states(capteur_temp_ext) | float(0) }}"
       temp_int: "{{ states(capteur_temp_int) | float(0) }}"
       azimut: "{{ state_attr('sun.sun', 'azimuth') | float(0) }}"
@@ -341,7 +331,6 @@ action:
         {% endif %}
 
       palier_num: "{{ palier | int }}"
-
       ancien_palier: "{{ states(palier_precedent) | int(-1) }}"
 
       pos_bso: >
@@ -388,7 +377,7 @@ action:
         sequence:
 
           # BSO avec retour → position directe
-          - service: cover.set_cover_position
+          - action: cover.set_cover_position
             target: !input bso_avec_retour
             data:
               position: "{{ pos_bso }}"
@@ -400,17 +389,17 @@ action:
                 - condition: template
                   value_template: "{{ volet_1 != '' }}"
               then:
-                - service: cover.open_cover
+                - action: cover.open_cover
                   target:
                     entity_id: "{{ volet_1 }}"
                 - delay:
                     seconds: "{{ duree_volet_1 | int }}"
-                - service: cover.close_cover
+                - action: cover.close_cover
                   target:
                     entity_id: "{{ volet_1 }}"
                 - delay:
                     seconds: "{{ (duree_volet_1 | float * ratio | float) | int }}"
-                - service: cover.stop_cover
+                - action: cover.stop_cover
                   target:
                     entity_id: "{{ volet_1 }}"
 
@@ -418,17 +407,17 @@ action:
                 - condition: template
                   value_template: "{{ volet_2 != '' }}"
               then:
-                - service: cover.open_cover
+                - action: cover.open_cover
                   target:
                     entity_id: "{{ volet_2 }}"
                 - delay:
                     seconds: "{{ duree_volet_2 | int }}"
-                - service: cover.close_cover
+                - action: cover.close_cover
                   target:
                     entity_id: "{{ volet_2 }}"
                 - delay:
                     seconds: "{{ (duree_volet_2 | float * ratio | float) | int }}"
-                - service: cover.stop_cover
+                - action: cover.stop_cover
                   target:
                     entity_id: "{{ volet_2 }}"
 
@@ -436,17 +425,17 @@ action:
                 - condition: template
                   value_template: "{{ volet_3 != '' }}"
               then:
-                - service: cover.open_cover
+                - action: cover.open_cover
                   target:
                     entity_id: "{{ volet_3 }}"
                 - delay:
                     seconds: "{{ duree_volet_3 | int }}"
-                - service: cover.close_cover
+                - action: cover.close_cover
                   target:
                     entity_id: "{{ volet_3 }}"
                 - delay:
                     seconds: "{{ (duree_volet_3 | float * ratio | float) | int }}"
-                - service: cover.stop_cover
+                - action: cover.stop_cover
                   target:
                     entity_id: "{{ volet_3 }}"
 
@@ -454,17 +443,17 @@ action:
                 - condition: template
                   value_template: "{{ volet_4 != '' }}"
               then:
-                - service: cover.open_cover
+                - action: cover.open_cover
                   target:
                     entity_id: "{{ volet_4 }}"
                 - delay:
                     seconds: "{{ duree_volet_4 | int }}"
-                - service: cover.close_cover
+                - action: cover.close_cover
                   target:
                     entity_id: "{{ volet_4 }}"
                 - delay:
                     seconds: "{{ (duree_volet_4 | float * ratio | float) | int }}"
-                - service: cover.stop_cover
+                - action: cover.stop_cover
                   target:
                     entity_id: "{{ volet_4 }}"
 
@@ -472,7 +461,7 @@ action:
         sequence: []
 
   # ── Mémorisation du nouveau palier ────────────────────────
-  - service: input_number.set_value
+  - action: input_number.set_value
     target:
       entity_id: "{{ palier_precedent }}"
     data:
