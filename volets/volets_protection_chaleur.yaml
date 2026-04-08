@@ -467,7 +467,7 @@ action:
         sequence:
 
           - choose:
-              - conditions: "{{ palier in ['1','2','3'] }}"
+              - conditions: "{{ palier_num in [1,2,3] }}"
                 sequence:
 
                   # BSO → descente complète + inclinaison selon palier
@@ -483,8 +483,8 @@ action:
                     target: !input bso_avec_retour
                     data:
                       tilt_position: >
-                        {% if palier == '3' %} 0
-                        {% elif palier == '2' %} 25
+                        {% if palier_num == 3 %} 0
+                        {% elif palier_num == 2 %} 25
                         {% else %} 50
                         {% endif %}
 
@@ -563,7 +563,7 @@ action:
                           target:
                             entity_id: "{{ volet_4 }}"
 
-              - conditions: "{{ palier == '0' }}"
+              - conditions: "{{ palier_num == 0 }}"
                 sequence: []
 
           # Mémorisation du nouveau palier
