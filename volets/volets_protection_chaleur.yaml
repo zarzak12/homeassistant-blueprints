@@ -376,6 +376,9 @@ action:
       volet_5: !input volet_5
       duree_volet_5: !input duree_volet_5
 
+      pos_velux_louka: "{{ state_attr('cover.velux_louka', 'current_position') }}"
+      pos_velux_theo: "{{ state_attr('cover.velux_theo', 'current_position') }}"
+
       s1e: "{{ chaude_ext_p1 if periode == 'chaude' else froide_ext_p1 }}"
       s2e: "{{ chaude_ext_p2 if periode == 'chaude' else froide_ext_p2 }}"
       s3e: "{{ chaude_ext_p3 if periode == 'chaude' else froide_ext_p3 }}"
