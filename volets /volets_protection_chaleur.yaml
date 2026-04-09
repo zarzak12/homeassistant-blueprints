@@ -476,16 +476,17 @@ action:
       # ═══════════════════════════════════════════════════════
       # CAS 2 : Soleil actif → gestion normale par paliers
       # ═══════════════════════════════════════════════════════
+  
   - repeat:
       while:
         - condition: template
           value_template: "{{ soleil_entree }}"
-
-      - choose:
-        - conditions:
+  
+      sequence:
+        - if:
             - condition: template
               value_template: "{{ soleil_actif and palier_num != ancien_palier }}"
-          sequence:
+          then:
             - variables:
                 temp_ext: "{{ states(capteur_temp_ext) | float(0) }}"
                 temp_int: "{{ states(capteur_temp_int) | float(0) }}"
