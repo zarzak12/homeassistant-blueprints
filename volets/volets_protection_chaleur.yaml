@@ -334,10 +334,10 @@ action:
       temp_ext: "{{ states(capteur_temp_ext) | float(0) }}"
       temp_int: "{{ states(capteur_temp_int) | float(0) }}"
       azimut: "{{ state_attr('sun.sun', 'azimuth') | float(0) }}"
-      azimut_ouest: 180
+      azimut_ouest: 200
       soleil_actif: "{{ azimut > az_min and azimut < az_max }}"
-      soleil_sud: "{{ azimut > az_min and azimut <= 180 }}"
-      soleil_ouest: "{{ azimut > 180 and azimut < az_max }}"
+      soleil_sud: "{{ azimut > az_min and azimut <= 200 }}"
+      soleil_ouest: "{{ azimut > 200 and azimut < az_max }}"
       chaude_ext_p1: !input chaude_ext_p1
       chaude_ext_p2: !input chaude_ext_p2
       chaude_ext_p3: !input chaude_ext_p3
