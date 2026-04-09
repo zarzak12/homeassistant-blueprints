@@ -443,12 +443,18 @@ action:
             target: !input bso_avec_retour
             data:
               tilt_position: 50  # Lames horizontales
-
+          
           # Velux → remontée complète + lames horizontales
-          - action: cover.set_cover_position
-            target: !input velux_avec_retour
-            data:
-              position: 100
+          # UNIQUEMENT si les deux velux ne sont pas fermés
+          - if:
+              - condition: template
+                value_template: >
+                  {{ pos_velux_louka != 0 and pos_velux_theo != 0 }}
+            then:
+              - action: cover.set_cover_position
+                target: !input velux_avec_retour
+                data:
+                  position: 100
               
           # Volets sud en premier
           - parallel:
