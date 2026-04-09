@@ -478,279 +478,274 @@ action:
       # ═══════════════════════════════════════════════════════
   - repeat:
       while:
-        - condition: or
-          conditions:
-            - condition: time
-              after: !input charge_time
-            - condition: time
-              before: !input end_charge_time
+        - condition: template
+          value_template: "{{ soleil_entree }}"
 
       sequence:
-                - conditions:
-                    - condition: template
-                      value_template: "{{ soleil_actif and palier_num != ancien_palier }}"
+        - conditions:
+            - condition: template
+              value_template: "{{ soleil_actif and palier_num != ancien_palier }}"
+          sequence:
+            - variables:
+                temp_ext: "{{ states(capteur_temp_ext) | float(0) }}"
+                temp_int: "{{ states(capteur_temp_int) | float(0) }}"
+                azimut: "{{ state_attr('sun.sun', 'azimuth') | float(0) }}"      
+                soleil_actif: "{{ azimut > az_min and azimut < az_max }}"
+                soleil_sud: "{{ azimut > az_min and azimut <= azimut_ouest }}"
+                soleil_ouest: "{{ azimut > azimut_ouest and azimut < az_max }}"
+                
+          
+                s1e: "{{ chaude_ext_p1 if periode == 'chaude' else froide_ext_p1 }}"
+                s2e: "{{ chaude_ext_p2 if periode == 'chaude' else froide_ext_p2 }}"
+                s3e: "{{ chaude_ext_p3 if periode == 'chaude' else froide_ext_p3 }}"
+                s1i: "{{ chaude_int_p1 if periode == 'chaude' else froide_int_p1 }}"
+                s2i: "{{ chaude_int_p2 if periode == 'chaude' else froide_int_p2 }}"
+                s3i: "{{ chaude_int_p3 if periode == 'chaude' else froide_int_p3 }}"
+          
+                palier: >
+                  {% if temp_ext >= s3e | float or temp_int >= s3i | float %} 3
+                  {% elif temp_ext >= s2e | float or temp_int >= s2i | float %} 2
+                  {% elif temp_ext >= s1e | float or temp_int >= s1i | float %} 1
+                  {% else %} 0
+                  {% endif %}
+          
+                palier_num: "{{ palier | int }}"
+                ancien_palier: "{{ states(palier_precedent) | int(-1) }}"
+          
+                ratio: >
+                  {% if palier_num == 3 %} 0.90
+                  {% elif palier_num == 2 %} 0.50
+                  {% elif palier_num == 1 %} 0.25
+                  {% else %} 0
+                  {% endif %}
+          
+                label_palier: >
+                  {% if palier_num == 3 %} 🔴 Palier 3 — 90%
+                  {% elif palier_num == 2 %} 🟠 Palier 2 — 50%
+                  {% elif palier_num == 1 %} 🟡 Palier 1 — 25%
+                  {% else %} 🟢 Palier 0 — aucune action
+                  {% endif %}
+          
+                label_ancien_palier: >
+                  {% if ancien_palier == 3 %} 🔴 Palier 3 — 90%
+                  {% elif ancien_palier == 2 %} 🟠 Palier 2 — 50%
+                  {% elif ancien_palier == 1 %} 🟡 Palier 1 — 25%
+                  {% elif ancien_palier == 0 %} 🟢 Palier 0
+                  {% else %} ❓ Inconnu
+                  {% endif %}
+                # Secondes cibles pour chaque volet selon le nouveau palier
+                cible_1: "{{ (duree_volet_1 | float * ratio | float) | int }}"
+                cible_2: "{{ (duree_volet_2 | float * ratio | float) | int }}"
+                cible_3: "{{ (duree_volet_3 | float * ratio | float) | int }}"
+                cible_4: "{{ (duree_volet_4 | float * ratio | float) | int }}"
+                cible_5: "{{ (duree_volet_5 | float * ratio | float) | int }}"
+  
+                # Secondes déjà descendues selon l'ancien palier
+                ratio_ancien: >
+                  {% if ancien_palier == 3 %} 0.90
+                  {% elif ancien_palier == 2 %} 0.50
+                  {% elif ancien_palier == 1 %} 0.25
+                  {% else %} 0
+                  {% endif %}
+  
+                deja_1: "{{ (duree_volet_1 | float * ratio_ancien | float) | int }}"
+                deja_2: "{{ (duree_volet_2 | float * ratio_ancien | float) | int }}"
+                deja_3: "{{ (duree_volet_3 | float * ratio_ancien | float) | int }}"
+                deja_4: "{{ (duree_volet_4 | float * ratio_ancien | float) | int }}"
+                deja_5: "{{ (duree_volet_5 | float * ratio_ancien | float) | int }}"
+  
+                # Delta à appliquer (positif = descendre encore, négatif = remonter)
+                delta_1: "{{ cible_1 - deja_1 }}"
+                delta_2: "{{ cible_2 - deja_2 }}"
+                delta_3: "{{ cible_3 - deja_3 }}"
+                delta_4: "{{ cible_4 - deja_4 }}"
+                delta_5: "{{ cible_5 - deja_5 }}"
+  
+            - choose:
+                - conditions: "{{ palier_num in [1,2,3] }}"
                   sequence:
-          
-                    - variables:
-                        temp_ext: "{{ states(capteur_temp_ext) | float(0) }}"
-                        temp_int: "{{ states(capteur_temp_int) | float(0) }}"
-                        azimut: "{{ state_attr('sun.sun', 'azimuth') | float(0) }}"      
-                        soleil_actif: "{{ azimut > az_min and azimut < az_max }}"
-                        soleil_sud: "{{ azimut > az_min and azimut <= azimut_ouest }}"
-                        soleil_ouest: "{{ azimut > azimut_ouest and azimut < az_max }}"
-                        
-                  
-                        s1e: "{{ chaude_ext_p1 if periode == 'chaude' else froide_ext_p1 }}"
-                        s2e: "{{ chaude_ext_p2 if periode == 'chaude' else froide_ext_p2 }}"
-                        s3e: "{{ chaude_ext_p3 if periode == 'chaude' else froide_ext_p3 }}"
-                        s1i: "{{ chaude_int_p1 if periode == 'chaude' else froide_int_p1 }}"
-                        s2i: "{{ chaude_int_p2 if periode == 'chaude' else froide_int_p2 }}"
-                        s3i: "{{ chaude_int_p3 if periode == 'chaude' else froide_int_p3 }}"
-                  
-                        palier: >
-                          {% if temp_ext >= s3e | float or temp_int >= s3i | float %} 3
-                          {% elif temp_ext >= s2e | float or temp_int >= s2i | float %} 2
-                          {% elif temp_ext >= s1e | float or temp_int >= s1i | float %} 1
-                          {% else %} 0
-                          {% endif %}
-                  
-                        palier_num: "{{ palier | int }}"
-                        ancien_palier: "{{ states(palier_precedent) | int(-1) }}"
-                  
-                        ratio: >
-                          {% if palier_num == 3 %} 0.90
-                          {% elif palier_num == 2 %} 0.50
-                          {% elif palier_num == 1 %} 0.25
-                          {% else %} 0
-                          {% endif %}
-                  
-                        label_palier: >
-                          {% if palier_num == 3 %} 🔴 Palier 3 — 90%
-                          {% elif palier_num == 2 %} 🟠 Palier 2 — 50%
-                          {% elif palier_num == 1 %} 🟡 Palier 1 — 25%
-                          {% else %} 🟢 Palier 0 — aucune action
-                          {% endif %}
-                  
-                        label_ancien_palier: >
-                          {% if ancien_palier == 3 %} 🔴 Palier 3 — 90%
-                          {% elif ancien_palier == 2 %} 🟠 Palier 2 — 50%
-                          {% elif ancien_palier == 1 %} 🟡 Palier 1 — 25%
-                          {% elif ancien_palier == 0 %} 🟢 Palier 0
-                          {% else %} ❓ Inconnu
-                          {% endif %}
-                        # Secondes cibles pour chaque volet selon le nouveau palier
-                        cible_1: "{{ (duree_volet_1 | float * ratio | float) | int }}"
-                        cible_2: "{{ (duree_volet_2 | float * ratio | float) | int }}"
-                        cible_3: "{{ (duree_volet_3 | float * ratio | float) | int }}"
-                        cible_4: "{{ (duree_volet_4 | float * ratio | float) | int }}"
-                        cible_5: "{{ (duree_volet_5 | float * ratio | float) | int }}"
-          
-                        # Secondes déjà descendues selon l'ancien palier
-                        ratio_ancien: >
-                          {% if ancien_palier == 3 %} 0.90
-                          {% elif ancien_palier == 2 %} 0.50
-                          {% elif ancien_palier == 1 %} 0.25
-                          {% else %} 0
-                          {% endif %}
-          
-                        deja_1: "{{ (duree_volet_1 | float * ratio_ancien | float) | int }}"
-                        deja_2: "{{ (duree_volet_2 | float * ratio_ancien | float) | int }}"
-                        deja_3: "{{ (duree_volet_3 | float * ratio_ancien | float) | int }}"
-                        deja_4: "{{ (duree_volet_4 | float * ratio_ancien | float) | int }}"
-                        deja_5: "{{ (duree_volet_5 | float * ratio_ancien | float) | int }}"
-          
-                        # Delta à appliquer (positif = descendre encore, négatif = remonter)
-                        delta_1: "{{ cible_1 - deja_1 }}"
-                        delta_2: "{{ cible_2 - deja_2 }}"
-                        delta_3: "{{ cible_3 - deja_3 }}"
-                        delta_4: "{{ cible_4 - deja_4 }}"
-                        delta_5: "{{ cible_5 - deja_5 }}"
-          
-                    - choose:
-                        - conditions: "{{ palier_num in [1,2,3] }}"
-                          sequence:
-          
-                            # BSO → descente complète + inclinaison selon palier
-                            - action: cover.set_cover_position
-                              target: !input velux_avec_retour
-                              data:
-                                position: 25
-                                
-                            # BSO → descente complète + inclinaison selon palier
-                            - action: cover.set_cover_position
-                              target: !input bso_avec_retour
-                              data:
-                                position: 0
-          
-                            - delay:
-                                seconds: 60
-          
-                            - action: cover.set_cover_tilt_position
-                              target: !input bso_avec_retour
-                              data:
-                                tilt_position: >
-                                  {% if palier_num == 3 %} 0
-                                  {% elif palier_num == 2 %} 25
-                                  {% else %} 50
-                                  {% endif %}
-          
-                            # Volets sans retour → delta en parallèle
-                            - parallel:
-          
-                              - if:
-                                  - condition: template
-                                    value_template: "{{ volet_1 != '' and soleil_sud and delta_1 != 0 }}"
-                                then:
-                                  - choose:
-                                      - conditions: "{{ delta_1 > 0 }}"
-                                        sequence:
-                                          - action: cover.close_cover
-                                            target:
-                                              entity_id: "{{ volet_1 }}"
-                                          - delay:
-                                              seconds: "{{ delta_1 }}"
-                                          - action: cover.stop_cover
-                                            target:
-                                              entity_id: "{{ volet_1 }}"
-                                      - conditions: "{{ delta_1 < 0 }}"
-                                        sequence:
-                                          - action: cover.open_cover
-                                            target:
-                                              entity_id: "{{ volet_1 }}"
-                                          - delay:
-                                              seconds: "{{ delta_1 | abs }}"
-                                          - action: cover.stop_cover
-                                            target:
-                                              entity_id: "{{ volet_1 }}"
-          
-                              - if:
-                                  - condition: template
-                                    value_template: "{{ volet_2 != '' and soleil_sud and delta_2 != 0 }}"
-                                then:
-                                  - choose:
-                                      - conditions: "{{ delta_2 > 0 }}"
-                                        sequence:
-                                          - action: cover.close_cover
-                                            target:
-                                              entity_id: "{{ volet_2 }}"
-                                          - delay:
-                                              seconds: "{{ delta_2 }}"
-                                          - action: cover.stop_cover
-                                            target:
-                                              entity_id: "{{ volet_2 }}"
-                                      - conditions: "{{ delta_2 < 0 }}"
-                                        sequence:
-                                          - action: cover.open_cover
-                                            target:
-                                              entity_id: "{{ volet_2 }}"
-                                          - delay:
-                                              seconds: "{{ delta_2 | abs }}"
-                                          - action: cover.stop_cover
-                                            target:
-                                              entity_id: "{{ volet_2 }}"
-          
-                              - if:
-                                  - condition: template
-                                    value_template: "{{ volet_3 != '' and soleil_ouest and delta_3 != 0 }}"
-                                then:
-                                  - choose:
-                                      - conditions: "{{ delta_3 > 0 }}"
-                                        sequence:
-                                          - action: cover.close_cover
-                                            target:
-                                              entity_id: "{{ volet_3 }}"
-                                          - delay:
-                                              seconds: "{{ delta_3 }}"
-                                          - action: cover.stop_cover
-                                            target:
-                                              entity_id: "{{ volet_3 }}"
-                                      - conditions: "{{ delta_3 < 0 }}"
-                                        sequence:
-                                          - action: cover.open_cover
-                                            target:
-                                              entity_id: "{{ volet_3 }}"
-                                          - delay:
-                                              seconds: "{{ delta_3 | abs }}"
-                                          - action: cover.stop_cover
-                                            target:
-                                              entity_id: "{{ volet_3 }}"
-          
-                              - if:
-                                  - condition: template
-                                    value_template: "{{ volet_4 != '' and soleil_ouest and delta_4 != 0 }}"
-                                then:
-                                  - choose:
-                                      - conditions: "{{ delta_4 > 0 }}"
-                                        sequence:
-                                          - action: cover.close_cover
-                                            target:
-                                              entity_id: "{{ volet_4 }}"
-                                          - delay:
-                                              seconds: "{{ delta_4 }}"
-                                          - action: cover.stop_cover
-                                            target:
-                                              entity_id: "{{ volet_4 }}"
-                                      - conditions: "{{ delta_4 < 0 }}"
-                                        sequence:
-                                          - action: cover.open_cover
-                                            target:
-                                              entity_id: "{{ volet_4 }}"
-                                          - delay:
-                                              seconds: "{{ delta_4 | abs }}"
-                                          - action: cover.stop_cover
-                                            target:
-                                              entity_id: "{{ volet_4 }}"
-          
-                              - if:
-                                  - condition: template
-                                    value_template: "{{ volet_5 != '' and soleil_sud and delta_5 != 0 }}"
-                                then:
-                                  - choose:
-                                      - conditions: "{{ delta_5 > 0 }}"
-                                        sequence:
-                                          - action: cover.close_cover
-                                            target:
-                                              entity_id: "{{ volet_5 }}"
-                                          - delay:
-                                              seconds: "{{ delta_5 }}"
-                                          - action: cover.stop_cover
-                                            target:
-                                              entity_id: "{{ volet_5 }}"
-                                      - conditions: "{{ delta_5 < 0 }}"
-                                        sequence:
-                                          - action: cover.open_cover
-                                            target:
-                                              entity_id: "{{ volet_5 }}"
-                                          - delay:
-                                              seconds: "{{ delta_5 | abs }}"
-                                          - action: cover.stop_cover
-                                            target:
-                                              entity_id: "{{ volet_5 }}"
-          
-                        - conditions: "{{ palier_num == 0 }}"
-                          sequence: []
-          
-                    # Mémorisation du nouveau palier
-                    - action: input_number.set_value
-                      target:
-                        entity_id: "{{ palier_precedent }}"
+  
+                    # BSO → descente complète + inclinaison selon palier
+                    - action: cover.set_cover_position
+                      target: !input velux_avec_retour
                       data:
-                        value: "{{ palier_num }}"
-          
-                    # Notification changement de palier
-                    - device_id: !input service_notification
-                      domain: mobile_app
-                      type: notify
-                      title: "🪟 Volets — Changement de palier"
-                      message: >
-                        {{ label_ancien_palier }} → {{ label_palier }}
-                        🌡️ Ext : {{ temp_ext }}°C  |  Int : {{ temp_int }}°C
-                        ☀️ Azimut soleil : {{ azimut | round(1) }}°
-                        📅 Période : {{ 'Chaude' if periode == 'chaude' else 'Froide' }}
-                        🕐 {{ now().strftime('%H:%M') }}
+                        position: 25
                         
+                    # BSO → descente complète + inclinaison selon palier
+                    - action: cover.set_cover_position
+                      target: !input bso_avec_retour
+                      data:
+                        position: 0
+  
                     - delay:
-                      minutes: 5
+                        seconds: 60
+  
+                    - action: cover.set_cover_tilt_position
+                      target: !input bso_avec_retour
+                      data:
+                        tilt_position: >
+                          {% if palier_num == 3 %} 0
+                          {% elif palier_num == 2 %} 25
+                          {% else %} 50
+                          {% endif %}
+  
+                    # Volets sans retour → delta en parallèle
+                    - parallel:
+  
+                      - if:
+                          - condition: template
+                            value_template: "{{ volet_1 != '' and soleil_sud and delta_1 != 0 }}"
+                        then:
+                          - choose:
+                              - conditions: "{{ delta_1 > 0 }}"
+                                sequence:
+                                  - action: cover.close_cover
+                                    target:
+                                      entity_id: "{{ volet_1 }}"
+                                  - delay:
+                                      seconds: "{{ delta_1 }}"
+                                  - action: cover.stop_cover
+                                    target:
+                                      entity_id: "{{ volet_1 }}"
+                              - conditions: "{{ delta_1 < 0 }}"
+                                sequence:
+                                  - action: cover.open_cover
+                                    target:
+                                      entity_id: "{{ volet_1 }}"
+                                  - delay:
+                                      seconds: "{{ delta_1 | abs }}"
+                                  - action: cover.stop_cover
+                                    target:
+                                      entity_id: "{{ volet_1 }}"
+  
+                      - if:
+                          - condition: template
+                            value_template: "{{ volet_2 != '' and soleil_sud and delta_2 != 0 }}"
+                        then:
+                          - choose:
+                              - conditions: "{{ delta_2 > 0 }}"
+                                sequence:
+                                  - action: cover.close_cover
+                                    target:
+                                      entity_id: "{{ volet_2 }}"
+                                  - delay:
+                                      seconds: "{{ delta_2 }}"
+                                  - action: cover.stop_cover
+                                    target:
+                                      entity_id: "{{ volet_2 }}"
+                              - conditions: "{{ delta_2 < 0 }}"
+                                sequence:
+                                  - action: cover.open_cover
+                                    target:
+                                      entity_id: "{{ volet_2 }}"
+                                  - delay:
+                                      seconds: "{{ delta_2 | abs }}"
+                                  - action: cover.stop_cover
+                                    target:
+                                      entity_id: "{{ volet_2 }}"
+  
+                      - if:
+                          - condition: template
+                            value_template: "{{ volet_3 != '' and soleil_ouest and delta_3 != 0 }}"
+                        then:
+                          - choose:
+                              - conditions: "{{ delta_3 > 0 }}"
+                                sequence:
+                                  - action: cover.close_cover
+                                    target:
+                                      entity_id: "{{ volet_3 }}"
+                                  - delay:
+                                      seconds: "{{ delta_3 }}"
+                                  - action: cover.stop_cover
+                                    target:
+                                      entity_id: "{{ volet_3 }}"
+                              - conditions: "{{ delta_3 < 0 }}"
+                                sequence:
+                                  - action: cover.open_cover
+                                    target:
+                                      entity_id: "{{ volet_3 }}"
+                                  - delay:
+                                      seconds: "{{ delta_3 | abs }}"
+                                  - action: cover.stop_cover
+                                    target:
+                                      entity_id: "{{ volet_3 }}"
+  
+                      - if:
+                          - condition: template
+                            value_template: "{{ volet_4 != '' and soleil_ouest and delta_4 != 0 }}"
+                        then:
+                          - choose:
+                              - conditions: "{{ delta_4 > 0 }}"
+                                sequence:
+                                  - action: cover.close_cover
+                                    target:
+                                      entity_id: "{{ volet_4 }}"
+                                  - delay:
+                                      seconds: "{{ delta_4 }}"
+                                  - action: cover.stop_cover
+                                    target:
+                                      entity_id: "{{ volet_4 }}"
+                              - conditions: "{{ delta_4 < 0 }}"
+                                sequence:
+                                  - action: cover.open_cover
+                                    target:
+                                      entity_id: "{{ volet_4 }}"
+                                  - delay:
+                                      seconds: "{{ delta_4 | abs }}"
+                                  - action: cover.stop_cover
+                                    target:
+                                      entity_id: "{{ volet_4 }}"
+  
+                      - if:
+                          - condition: template
+                            value_template: "{{ volet_5 != '' and soleil_sud and delta_5 != 0 }}"
+                        then:
+                          - choose:
+                              - conditions: "{{ delta_5 > 0 }}"
+                                sequence:
+                                  - action: cover.close_cover
+                                    target:
+                                      entity_id: "{{ volet_5 }}"
+                                  - delay:
+                                      seconds: "{{ delta_5 }}"
+                                  - action: cover.stop_cover
+                                    target:
+                                      entity_id: "{{ volet_5 }}"
+                              - conditions: "{{ delta_5 < 0 }}"
+                                sequence:
+                                  - action: cover.open_cover
+                                    target:
+                                      entity_id: "{{ volet_5 }}"
+                                  - delay:
+                                      seconds: "{{ delta_5 | abs }}"
+                                  - action: cover.stop_cover
+                                    target:
+                                      entity_id: "{{ volet_5 }}"
+  
+                - conditions: "{{ palier_num == 0 }}"
+                  sequence: []
+  
+            # Mémorisation du nouveau palier
+            - action: input_number.set_value
+              target:
+                entity_id: "{{ palier_precedent }}"
+              data:
+                value: "{{ palier_num }}"
+  
+            # Notification changement de palier
+            - device_id: !input service_notification
+              domain: mobile_app
+              type: notify
+              title: "🪟 Volets — Changement de palier"
+              message: >
+                {{ label_ancien_palier }} → {{ label_palier }}
+                🌡️ Ext : {{ temp_ext }}°C  |  Int : {{ temp_int }}°C
+                ☀️ Azimut soleil : {{ azimut | round(1) }}°
+                📅 Période : {{ 'Chaude' if periode == 'chaude' else 'Froide' }}
+                🕐 {{ now().strftime('%H:%M') }}
+                
+            - delay:
+              minutes: 5
 
 mode: single
 max_exceeded: silent
