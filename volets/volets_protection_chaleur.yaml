@@ -329,6 +329,12 @@ trigger:
       - !input capteur_temp_ext
       - !input capteur_temp_int
       - sun.sun
+  - platform: template
+    id: soleil_bascule_ouest
+    value_template: >
+      {% set az = state_attr('sun.sun','azimuth') | float(0) %}
+      {% set seuil = !input azimut_ouets | float %}
+      {{ az >= seuil }}
 
 condition: []
 
