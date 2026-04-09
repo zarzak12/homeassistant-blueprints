@@ -397,17 +397,17 @@ action:
         {% endif %}
 
       label_palier: >
-        {% if palier_num == 3 %} 🔴 Palier 3 — fermeture 90%
-        {% elif palier_num == 2 %} 🟠 Palier 2 — fermeture 50%
-        {% elif palier_num == 1 %} 🟡 Palier 1 — fermeture 25%
+        {% if palier_num == 3 %} 🔴 Palier 3 — 90%
+        {% elif palier_num == 2 %} 🟠 Palier 2 — 50%
+        {% elif palier_num == 1 %} 🟡 Palier 1 — 25%
         {% else %} 🟢 Palier 0 — aucune action
         {% endif %}
 
       label_ancien_palier: >
-        {% if ancien_palier == 3 %} 🔴 Palier 3 — fermeture 90%
-        {% elif ancien_palier == 2 %} 🟠 Palier 2 — fermeture 50%
-        {% elif ancien_palier == 1 %} 🟡 Palier 1 — fermeture 25%
-        {% elif ancien_palier == 0 %} 🟢 Palier 0 — aucune action
+        {% if ancien_palier == 3 %} 🔴 Palier 3 — 90%
+        {% elif ancien_palier == 2 %} 🟠 Palier 2 — 50%
+        {% elif ancien_palier == 1 %} 🟡 Palier 1 — 25%
+        {% elif ancien_palier == 0 %} 🟢 Palier 0
         {% else %} ❓ Inconnu
         {% endif %}
 
@@ -506,7 +506,6 @@ action:
             message: >
               ☀️ Soleil sorti de la zone (azimut {{ azimut | round(1) }}°)
               Volets sud remontés, puis volets ouest.
-
               🌡️ Ext : {{ temp_ext }}°C  |  Int : {{ temp_int }}°C
               🕐 {{ now().strftime('%H:%M') }}
 
@@ -725,7 +724,6 @@ action:
             title: "🪟 Volets — Changement de palier"
             message: >
               {{ label_ancien_palier }} → {{ label_palier }}
-
               🌡️ Ext : {{ temp_ext }}°C  |  Int : {{ temp_int }}°C
               ☀️ Azimut soleil : {{ azimut | round(1) }}°
               📅 Période : {{ 'Chaude' if periode == 'chaude' else 'Froide' }}
