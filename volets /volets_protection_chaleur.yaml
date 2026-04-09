@@ -481,7 +481,7 @@ action:
         - condition: template
           value_template: "{{ soleil_entree }}"
 
-      sequence:
+      - choose:
         - conditions:
             - condition: template
               value_template: "{{ soleil_actif and palier_num != ancien_palier }}"
