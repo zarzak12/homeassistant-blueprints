@@ -476,19 +476,16 @@ action:
       # ═══════════════════════════════════════════════════════
       # CAS 2 : Soleil actif → gestion normale par paliers
       # ═══════════════════════════════════════════════════════
-      - conditions:
-          - condition: trigger
-            id: soleil_entree
-        sequence:
+  - repeat:
+      while:
+        - condition: or
+          conditions:
+            - condition: time
+              after: !input charge_time
+            - condition: time
+              before: !input end_charge_time
 
-          - repeat:
-              while:
-                - condition: template
-                  value_template: >
-                    {% set az = state_attr('sun.sun','azimuth') | float(0) %}
-                    {{ az > az_min and az < az_max }}
-
-              sequence:
+      sequence:
                 - conditions:
                     - condition: template
                       value_template: "{{ soleil_actif and palier_num != ancien_palier }}"
