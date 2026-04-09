@@ -684,7 +684,7 @@ action:
 
                     - if:
                         - condition: template
-                          value_template: "{{ volet_5 != '' and soleil_ouest and delta_5 != 0 }}"
+                          value_template: "{{ volet_5 != '' and soleil_sud and delta_5 != 0 }}"
                       then:
                         - choose:
                             - conditions: "{{ delta_5 > 0 }}"
