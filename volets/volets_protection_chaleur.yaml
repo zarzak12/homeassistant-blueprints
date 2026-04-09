@@ -466,6 +466,32 @@ action:
             value_template: "{{ soleil_actif and palier_num != ancien_palier }}"
         sequence:
 
+          - variables:
+              # Secondes cibles pour chaque volet selon le nouveau palier
+              cible_1: "{{ (duree_volet_1 | float * ratio | float) | int }}"
+              cible_2: "{{ (duree_volet_2 | float * ratio | float) | int }}"
+              cible_3: "{{ (duree_volet_3 | float * ratio | float) | int }}"
+              cible_4: "{{ (duree_volet_4 | float * ratio | float) | int }}"
+
+              # Secondes déjà descendues selon l'ancien palier
+              ratio_ancien: >
+                {% if ancien_palier == 3 %} 0.90
+                {% elif ancien_palier == 2 %} 0.50
+                {% elif ancien_palier == 1 %} 0.25
+                {% else %} 0
+                {% endif %}
+
+              deja_1: "{{ (duree_volet_1 | float * ratio_ancien | float) | int }}"
+              deja_2: "{{ (duree_volet_2 | float * ratio_ancien | float) | int }}"
+              deja_3: "{{ (duree_volet_3 | float * ratio_ancien | float) | int }}"
+              deja_4: "{{ (duree_volet_4 | float * ratio_ancien | float) | int }}"
+
+              # Delta à appliquer (positif = descendre encore, négatif = remonter)
+              delta_1: "{{ cible_1 - deja_1 }}"
+              delta_2: "{{ cible_2 - deja_2 }}"
+              delta_3: "{{ cible_3 - deja_3 }}"
+              delta_4: "{{ cible_4 - deja_4 }}"
+
           - choose:
               - conditions: "{{ palier_num in [1,2,3] }}"
                 sequence:
@@ -488,80 +514,112 @@ action:
                         {% else %} 50
                         {% endif %}
 
-                  # Volets sans retour → minuterie en parallèle
+                  # Volets sans retour → delta en parallèle
                   - parallel:
 
                     - if:
                         - condition: template
-                          value_template: "{{ volet_1 != '' and soleil_sud }}"
+                          value_template: "{{ volet_1 != '' and soleil_sud and delta_1 != 0 }}"
                       then:
-                        - action: cover.open_cover
-                          target:
-                            entity_id: "{{ volet_1 }}"
-                        - delay:
-                            seconds: "{{ duree_volet_1 | int }}"
-                        - action: cover.close_cover
-                          target:
-                            entity_id: "{{ volet_1 }}"
-                        - delay:
-                            seconds: "{{ (duree_volet_1 | float * ratio | float) | int }}"
-                        - action: cover.stop_cover
-                          target:
-                            entity_id: "{{ volet_1 }}"
+                        - choose:
+                            - conditions: "{{ delta_1 > 0 }}"
+                              sequence:
+                                - action: cover.close_cover
+                                  target:
+                                    entity_id: "{{ volet_1 }}"
+                                - delay:
+                                    seconds: "{{ delta_1 }}"
+                                - action: cover.stop_cover
+                                  target:
+                                    entity_id: "{{ volet_1 }}"
+                            - conditions: "{{ delta_1 < 0 }}"
+                              sequence:
+                                - action: cover.open_cover
+                                  target:
+                                    entity_id: "{{ volet_1 }}"
+                                - delay:
+                                    seconds: "{{ delta_1 | abs }}"
+                                - action: cover.stop_cover
+                                  target:
+                                    entity_id: "{{ volet_1 }}"
 
                     - if:
                         - condition: template
-                          value_template: "{{ volet_2 != '' and soleil_sud }}"
+                          value_template: "{{ volet_2 != '' and soleil_sud and delta_2 != 0 }}"
                       then:
-                        - action: cover.open_cover
-                          target:
-                            entity_id: "{{ volet_2 }}"
-                        - delay:
-                            seconds: "{{ duree_volet_2 | int }}"
-                        - action: cover.close_cover
-                          target:
-                            entity_id: "{{ volet_2 }}"
-                        - delay:
-                            seconds: "{{ (duree_volet_2 | float * ratio | float) | int }}"
-                        - action: cover.stop_cover
-                          target:
-                            entity_id: "{{ volet_2 }}"
+                        - choose:
+                            - conditions: "{{ delta_2 > 0 }}"
+                              sequence:
+                                - action: cover.close_cover
+                                  target:
+                                    entity_id: "{{ volet_2 }}"
+                                - delay:
+                                    seconds: "{{ delta_2 }}"
+                                - action: cover.stop_cover
+                                  target:
+                                    entity_id: "{{ volet_2 }}"
+                            - conditions: "{{ delta_2 < 0 }}"
+                              sequence:
+                                - action: cover.open_cover
+                                  target:
+                                    entity_id: "{{ volet_2 }}"
+                                - delay:
+                                    seconds: "{{ delta_2 | abs }}"
+                                - action: cover.stop_cover
+                                  target:
+                                    entity_id: "{{ volet_2 }}"
 
                     - if:
                         - condition: template
-                          value_template: "{{ volet_3 != '' and soleil_ouest }}"
+                          value_template: "{{ volet_3 != '' and soleil_ouest and delta_3 != 0 }}"
                       then:
-                        - action: cover.open_cover
-                          target:
-                            entity_id: "{{ volet_3 }}"
-                        - delay:
-                            seconds: "{{ duree_volet_3 | int }}"
-                        - action: cover.close_cover
-                          target:
-                            entity_id: "{{ volet_3 }}"
-                        - delay:
-                            seconds: "{{ (duree_volet_3 | float * ratio | float) | int }}"
-                        - action: cover.stop_cover
-                          target:
-                            entity_id: "{{ volet_3 }}"
+                        - choose:
+                            - conditions: "{{ delta_3 > 0 }}"
+                              sequence:
+                                - action: cover.close_cover
+                                  target:
+                                    entity_id: "{{ volet_3 }}"
+                                - delay:
+                                    seconds: "{{ delta_3 }}"
+                                - action: cover.stop_cover
+                                  target:
+                                    entity_id: "{{ volet_3 }}"
+                            - conditions: "{{ delta_3 < 0 }}"
+                              sequence:
+                                - action: cover.open_cover
+                                  target:
+                                    entity_id: "{{ volet_3 }}"
+                                - delay:
+                                    seconds: "{{ delta_3 | abs }}"
+                                - action: cover.stop_cover
+                                  target:
+                                    entity_id: "{{ volet_3 }}"
 
                     - if:
                         - condition: template
-                          value_template: "{{ volet_4 != '' and soleil_ouest }}"
+                          value_template: "{{ volet_4 != '' and soleil_ouest and delta_4 != 0 }}"
                       then:
-                        - action: cover.open_cover
-                          target:
-                            entity_id: "{{ volet_4 }}"
-                        - delay:
-                            seconds: "{{ duree_volet_4 | int }}"
-                        - action: cover.close_cover
-                          target:
-                            entity_id: "{{ volet_4 }}"
-                        - delay:
-                            seconds: "{{ (duree_volet_4 | float * ratio | float) | int }}"
-                        - action: cover.stop_cover
-                          target:
-                            entity_id: "{{ volet_4 }}"
+                        - choose:
+                            - conditions: "{{ delta_4 > 0 }}"
+                              sequence:
+                                - action: cover.close_cover
+                                  target:
+                                    entity_id: "{{ volet_4 }}"
+                                - delay:
+                                    seconds: "{{ delta_4 }}"
+                                - action: cover.stop_cover
+                                  target:
+                                    entity_id: "{{ volet_4 }}"
+                            - conditions: "{{ delta_4 < 0 }}"
+                              sequence:
+                                - action: cover.open_cover
+                                  target:
+                                    entity_id: "{{ volet_4 }}"
+                                - delay:
+                                    seconds: "{{ delta_4 | abs }}"
+                                - action: cover.stop_cover
+                                  target:
+                                    entity_id: "{{ volet_4 }}"
 
               - conditions: "{{ palier_num == 0 }}"
                 sequence: []
