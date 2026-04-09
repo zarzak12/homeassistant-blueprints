@@ -309,6 +309,17 @@ blueprint:
           unit_of_measurement: "°C"
       default: 25
 
+    azimut_ouets:
+      name: "Azimut bascule OUEST"
+      description: "Le soleil bascule (côté ouest). Défaut : 200°"
+      selector:
+        number:
+          min: 180
+          max: 360
+          step: 5
+          unit_of_measurement: "°"
+      default: 200
+
 # ── Déclencheurs ──────────────────────────────────────────────
 trigger:
   - platform: time_pattern
@@ -334,10 +345,10 @@ action:
       temp_ext: "{{ states(capteur_temp_ext) | float(0) }}"
       temp_int: "{{ states(capteur_temp_int) | float(0) }}"
       azimut: "{{ state_attr('sun.sun', 'azimuth') | float(0) }}"
-      azimut_ouest: 200
+      azimut_ouest: !input azimut_ouets
       soleil_actif: "{{ azimut > az_min and azimut < az_max }}"
-      soleil_sud: "{{ azimut > az_min and azimut <= 200 }}"
-      soleil_ouest: "{{ azimut > 200 and azimut < az_max }}"
+      soleil_sud: "{{ azimut > az_min and azimut <= azimut_ouest }}"
+      soleil_ouest: "{{ azimut > azimut_ouest and azimut < az_max }}"
       chaude_ext_p1: !input chaude_ext_p1
       chaude_ext_p2: !input chaude_ext_p2
       chaude_ext_p3: !input chaude_ext_p3
