@@ -441,7 +441,7 @@ action:
           - action: cover.set_cover_position
             target: !input velux_avec_retour
             data:
-              position: 0
+              position: 100
               
           # Volets sud en premier
           - parallel:
@@ -554,16 +554,16 @@ action:
                   - action: cover.set_cover_position
                     target: !input velux_avec_retour
                     data:
-                      position: 100
+                      position: 25
                       
                   # BSO → descente complète + inclinaison selon palier
                   - action: cover.set_cover_position
                     target: !input bso_avec_retour
                     data:
-                      position: 100
+                      position: 0
 
                   - delay:
-                      seconds: 30
+                      seconds: 60
 
                   - action: cover.set_cover_tilt_position
                     target: !input bso_avec_retour
