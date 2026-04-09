@@ -330,9 +330,9 @@ trigger:
       - !input capteur_temp_int
       - sun.sun
   - platform: template
-  id: soleil_bascule_ouest
-  value_template: >
-    {{ state_attr('sun.sun', 'azimuth') | float(0) >= 220 }}
+    id: soleil_bascule_ouest
+    value_template: >
+      {{ state_attr('sun.sun', 'azimuth') | float(0) >= 220 }}
 
 condition: []
 
