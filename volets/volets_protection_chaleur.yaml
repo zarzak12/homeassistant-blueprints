@@ -518,7 +518,15 @@ action:
       # ═══════════════════════════════════════════════════════
       - conditions:
           - condition: template
-            value_template: "{{ soleil_actif and ((palier_num != ancien_palier) or trigger.id == 'soleil_bascule_ouest') }}"
+            value_template: "{{ soleil_actif }}"
+      
+          - condition: or
+            conditions:
+              - condition: template
+                value_template: "{{ palier_num != ancien_palier }}"
+      
+              - condition: template
+                value_template: "{{ trigger.id == 'soleil_bascule_ouest' }}"
 
         sequence:
 
