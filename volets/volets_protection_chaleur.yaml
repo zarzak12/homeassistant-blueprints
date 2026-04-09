@@ -332,7 +332,7 @@ trigger:
   - platform: template
     id: soleil_bascule_ouest
     value_template: >-
-      {{ state_attr('sun.sun', 'azimuth') | float(0) >= 220 | float(0) }}
+      {{ state_attr('sun.sun', 'azimuth') | float(0) = 220 | float(0) }}
 
 condition: []
 
@@ -518,7 +518,7 @@ action:
       # ═══════════════════════════════════════════════════════
       - conditions:
           - condition: template
-            value_template: "{{ soleil_actif and palier_num != ancien_palier }}"
+            value_template: "{{ soleil_actif and ((palier_num != ancien_palier) or soleil_bascule_ouest) }}"
         sequence:
 
           - variables:
@@ -583,7 +583,7 @@ action:
 
                     - if:
                         - condition: template
-                          value_template: "{{ volet_1 != '' and soleil_sud and delta_1 != 0 }}"
+                          value_template: "{{ volet_1 != '' and soleil_sud and delta_1 != 0 and not soleil_bascule_ouest }}"
                       then:
                         - choose:
                             - conditions: "{{ delta_1 > 0 }}"
@@ -609,7 +609,7 @@ action:
 
                     - if:
                         - condition: template
-                          value_template: "{{ volet_2 != '' and soleil_sud and delta_2 != 0 }}"
+                          value_template: "{{ volet_2 != '' and soleil_sud and delta_2 != 0 and not soleil_bascule_ouest}}"
                       then:
                         - choose:
                             - conditions: "{{ delta_2 > 0 }}"
