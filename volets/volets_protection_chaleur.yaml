@@ -333,7 +333,7 @@ trigger:
     id: soleil_bascule_ouest
     value_template: >
       {% set az = state_attr('sun.sun','azimuth') | float(0) %}
-      {% set seuil = !input azimut_ouets | float %}
+      {% set seuil = 220 | float %}
       {{ az >= seuil }}
 
 condition: []
