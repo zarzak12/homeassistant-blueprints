@@ -745,8 +745,7 @@ action:
                 📅 Période : {{ 'Chaude' if periode == 'chaude' else 'Froide' }}
                 🕐 {{ now().strftime('%H:%M') }}
                 
-            - delay:
-              minutes: 5
+            - delay: "00:05:00"
 
 mode: single
 max_exceeded: silent
