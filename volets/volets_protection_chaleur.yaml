@@ -525,8 +525,8 @@ action:
               - condition: template
                 value_template: "{{ palier_num != ancien_palier }}"
       
-              - condition: template
-                value_template: "{{ trigger.id == 'soleil_bascule_ouest' }}"
+              - condition: trigger
+                id: soleil_bascule_ouest
 
         sequence:
 
