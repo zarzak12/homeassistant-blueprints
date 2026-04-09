@@ -1,5 +1,5 @@
 blueprint:
-  name: "Protection chaleur - Volets (période chaude / froide)"
+  name: "Protection chaleur - Volets (période chaude / froide) - Dev"
   description: >
     Ferme progressivement les volets selon la température extérieure et
     intérieure, la position du soleil et la période de l'année (chaude ou froide).
