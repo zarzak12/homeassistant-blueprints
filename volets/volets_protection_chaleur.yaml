@@ -51,6 +51,14 @@ blueprint:
           entity:
             domain: cover
 
+    velux_avec_retour:
+      name: "Velux / Volets avec retour de position"
+      description: "Vos velux Somfy IO — position envoyée directement"
+      selector:
+        target:
+          entity:
+            domain: cover
+
     volet_1:
       name: "Volet salon sans retour SUD"
       selector:
@@ -118,6 +126,23 @@ blueprint:
           step: 1
           unit_of_measurement: s
       default: 30
+
+      volet_5:
+      name: "Volet Chambre sans retour SUD"
+      selector:
+        entity:
+          domain: cover
+      default: ""
+
+    duree_volet_5:
+      name: "Durée descente complète - volet 5 (secondes)"
+      selector:
+        number:
+          min: 5
+          max: 120
+          step: 1
+          unit_of_measurement: s
+      default: 20
 
     # ── Délai entre réouverture sud et ouest ──────────────────
     delai_reouverture:
@@ -333,6 +358,8 @@ action:
       duree_volet_3: !input duree_volet_3
       volet_4: !input volet_4
       duree_volet_4: !input duree_volet_4
+      volet_5: !input volet_5
+      duree_volet_5: !input duree_volet_5
 
       s1e: "{{ chaude_ext_p1 if periode == 'chaude' else froide_ext_p1 }}"
       s2e: "{{ chaude_ext_p2 if periode == 'chaude' else froide_ext_p2 }}"
@@ -399,6 +426,12 @@ action:
             data:
               tilt_position: 50  # Lames horizontales
 
+          # Velux → remontée complète + lames horizontales
+          - action: cover.set_cover_position
+            target: !input velux_avec_retour
+            data:
+              position: 0
+              
           # Volets sud en premier
           - parallel:
             - if:
@@ -439,6 +472,14 @@ action:
                   target:
                     entity_id: "{{ volet_4 }}"
 
+            - if:
+                - condition: template
+                  value_template: "{{ volet_5 != '' }}"
+              then:
+                - action: cover.open_cover
+                  target:
+                    entity_id: "{{ volet_5 }}"
+
           # Remise à zéro du palier mémorisé
           - action: input_number.set_value
             target:
@@ -472,6 +513,7 @@ action:
               cible_2: "{{ (duree_volet_2 | float * ratio | float) | int }}"
               cible_3: "{{ (duree_volet_3 | float * ratio | float) | int }}"
               cible_4: "{{ (duree_volet_4 | float * ratio | float) | int }}"
+              cible_5: "{{ (duree_volet_5 | float * ratio | float) | int }}"
 
               # Secondes déjà descendues selon l'ancien palier
               ratio_ancien: >
@@ -485,12 +527,14 @@ action:
               deja_2: "{{ (duree_volet_2 | float * ratio_ancien | float) | int }}"
               deja_3: "{{ (duree_volet_3 | float * ratio_ancien | float) | int }}"
               deja_4: "{{ (duree_volet_4 | float * ratio_ancien | float) | int }}"
+              deja_5: "{{ (duree_volet_5 | float * ratio_ancien | float) | int }}"
 
               # Delta à appliquer (positif = descendre encore, négatif = remonter)
               delta_1: "{{ cible_1 - deja_1 }}"
               delta_2: "{{ cible_2 - deja_2 }}"
               delta_3: "{{ cible_3 - deja_3 }}"
               delta_4: "{{ cible_4 - deja_4 }}"
+              delta_5: "{{ cible_5 - deja_5 }}"
 
           - choose:
               - conditions: "{{ palier_num in [1,2,3] }}"
@@ -498,9 +542,15 @@ action:
 
                   # BSO → descente complète + inclinaison selon palier
                   - action: cover.set_cover_position
+                    target: !input velux_avec_retour
+                    data:
+                      position: 100
+                      
+                  # BSO → descente complète + inclinaison selon palier
+                  - action: cover.set_cover_position
                     target: !input bso_avec_retour
                     data:
-                      position: 0
+                      position: 100
 
                   - delay:
                       seconds: 30
@@ -620,6 +670,32 @@ action:
                                 - action: cover.stop_cover
                                   target:
                                     entity_id: "{{ volet_4 }}"
+
+                    - if:
+                        - condition: template
+                          value_template: "{{ volet_5 != '' and soleil_ouest and delta_5 != 0 }}"
+                      then:
+                        - choose:
+                            - conditions: "{{ delta_5 > 0 }}"
+                              sequence:
+                                - action: cover.close_cover
+                                  target:
+                                    entity_id: "{{ volet_5 }}"
+                                - delay:
+                                    seconds: "{{ delta_5 }}"
+                                - action: cover.stop_cover
+                                  target:
+                                    entity_id: "{{ volet_5 }}"
+                            - conditions: "{{ delta_5 < 0 }}"
+                              sequence:
+                                - action: cover.open_cover
+                                  target:
+                                    entity_id: "{{ volet_5 }}"
+                                - delay:
+                                    seconds: "{{ delta_5 | abs }}"
+                                - action: cover.stop_cover
+                                  target:
+                                    entity_id: "{{ volet_5 }}"
 
               - conditions: "{{ palier_num == 0 }}"
                 sequence: []
