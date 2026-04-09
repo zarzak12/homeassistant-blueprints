@@ -331,8 +331,8 @@ trigger:
       - sun.sun
   - platform: template
     id: soleil_bascule_ouest
-    value_template: >
-      {{ state_attr('sun.sun', 'azimuth') | float(0) >= 220 }}
+    value_template: >-
+      {{ state_attr('sun.sun', 'azimuth') | float(0) >= 220 | float(0) }}
 
 condition: []
 
