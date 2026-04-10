@@ -220,7 +220,7 @@ blueprint:
       default: "chaude"
 
     chaude_ext_p1:
-      name: "🌞 Chaude - Palier 1 temp ext (°C) — fermeture 25%"
+      name: "🌞 Chaude - Palier 1 temp ext (°C)"
       selector:
         number:
           min: 10
@@ -230,7 +230,7 @@ blueprint:
       default: 25
 
     chaude_ext_p2:
-      name: "🌞 Chaude - Palier 2 temp ext (°C) — fermeture 50%"
+      name: "🌞 Chaude - Palier 2 temp ext (°C)"
       selector:
         number:
           min: 10
@@ -240,7 +240,7 @@ blueprint:
       default: 29
 
     chaude_ext_p3:
-      name: "🌞 Chaude - Palier 3 temp ext (°C) — fermeture 90%"
+      name: "🌞 Chaude - Palier 3 temp ext (°C)"
       selector:
         number:
           min: 10
@@ -250,7 +250,7 @@ blueprint:
       default: 33
 
     chaude_int_p1:
-      name: "🌞 Chaude - Palier 1 temp int (°C) — fermeture 25%"
+      name: "🌞 Chaude - Palier 1 temp int (°C)"
       selector:
         number:
           min: 15
@@ -260,7 +260,7 @@ blueprint:
       default: 24
 
     chaude_int_p2:
-      name: "🌞 Chaude - Palier 2 temp int (°C) — fermeture 50%"
+      name: "🌞 Chaude - Palier 2 temp int (°C)"
       selector:
         number:
           min: 15
@@ -270,7 +270,7 @@ blueprint:
       default: 27
 
     chaude_int_p3:
-      name: "🌞 Chaude - Palier 3 temp int (°C) — fermeture 90%"
+      name: "🌞 Chaude - Palier 3 temp int (°C)"
       selector:
         number:
           min: 15
@@ -280,7 +280,7 @@ blueprint:
       default: 30
 
     froide_ext_p1:
-      name: "🌨️ Froide - Palier 1 temp ext (°C) — fermeture 25%"
+      name: "🌨️ Froide - Palier 1 temp ext (°C)"
       selector:
         number:
           min: 5
@@ -290,7 +290,7 @@ blueprint:
       default: 14
 
     froide_ext_p2:
-      name: "🌨️ Froide - Palier 2 temp ext (°C) — fermeture 50%"
+      name: "🌨️ Froide - Palier 2 temp ext (°C)"
       selector:
         number:
           min: 5
@@ -300,7 +300,7 @@ blueprint:
       default: 18
 
     froide_ext_p3:
-      name: "🌨️ Froide - Palier 3 temp ext (°C) — fermeture 90%"
+      name: "🌨️ Froide - Palier 3 temp ext (°C)"
       selector:
         number:
           min: 5
@@ -310,7 +310,7 @@ blueprint:
       default: 22
 
     froide_int_p1:
-      name: "🌨️ Froide - Palier 1 temp int (°C) — fermeture 25%"
+      name: "🌨️ Froide - Palier 1 temp int (°C)"
       selector:
         number:
           min: 15
@@ -320,7 +320,7 @@ blueprint:
       default: 19
 
     froide_int_p2:
-      name: "🌨️ Froide - Palier 2 temp int (°C) — fermeture 50%"
+      name: "🌨️ Froide - Palier 2 temp int (°C)"
       selector:
         number:
           min: 15
@@ -330,7 +330,7 @@ blueprint:
       default: 22
 
     froide_int_p3:
-      name: "🌨️ Froide - Palier 3 temp int (°C) — fermeture 90%"
+      name: "🌨️ Froide - Palier 3 temp int (°C)"
       selector:
         number:
           min: 15
