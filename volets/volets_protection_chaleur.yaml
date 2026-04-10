@@ -329,10 +329,15 @@ trigger:
       - !input capteur_temp_ext
       - !input capteur_temp_int
       - sun.sun
-  - platform: template
+  #- platform: template
+  #  id: soleil_bascule_ouest
+  #  value_template: >-
+  #    {{ state_attr('sun.sun', 'azimuth') | float(0) == 220 | float(0) }}
+  - platform: numeric_state
     id: soleil_bascule_ouest
-    value_template: >-
-      {{ state_attr('sun.sun', 'azimuth') | float(0) == 220 | float(0) }}
+    entity_id: sun.sun
+    attribute: azimuth
+    above: !input azimut_ouets
 
 condition: []
 
@@ -378,6 +383,7 @@ action:
 
       pos_velux_louka: "{{ state_attr('cover.velux_louka', 'current_position') }}"
       pos_velux_theo: "{{ state_attr('cover.velux_theo', 'current_position') }}"
+      est_bascule_ouest: "{{ trigger.id == 'soleil_bascule_ouest' }}"
 
       s1e: "{{ chaude_ext_p1 if periode == 'chaude' else froide_ext_p1 }}"
       s2e: "{{ chaude_ext_p2 if periode == 'chaude' else froide_ext_p2 }}"
@@ -564,8 +570,18 @@ action:
               # Delta à appliquer (positif = descendre encore, négatif = remonter)
               delta_1: "{{ cible_1 - deja_1 }}"
               delta_2: "{{ cible_2 - deja_2 }}"
-              delta_3: "{{ cible_3 - deja_3 }}"
-              delta_4: "{{ cible_4 - deja_4 }}"
+              delta_3: >
+                {% if est_bascule_ouest %}
+                  {{ cible_3 }}
+                {% else %}
+                  {{ cible_3 - deja_3 }}
+                {% endif %}
+              delta_4: >
+                {% if est_bascule_ouest %}
+                  {{ cible_4 }}
+                {% else %}
+                  {{ cible_4 - deja_4 }}
+                {% endif %}
               delta_5: "{{ cible_5 - deja_5 }}"
 
           - choose:
@@ -623,7 +639,7 @@ action:
 
                     - if:
                         - condition: template
-                          value_template: "{{ volet_1 != '' and soleil_sud and delta_1 != 0 and not soleil_bascule_ouest }}"
+                          value_template: "{{ volet_1 != '' and soleil_sud and delta_1 != 0 and not est_bascule_ouest }}"
                       then:
                         - choose:
                             - conditions: "{{ delta_1 > 0 }}"
@@ -649,7 +665,7 @@ action:
 
                     - if:
                         - condition: template
-                          value_template: "{{ volet_2 != '' and soleil_sud and delta_2 != 0 and not soleil_bascule_ouest}}"
+                          value_template: "{{ volet_2 != '' and soleil_sud and delta_2 != 0 and not est_bascule_ouest}}"
                       then:
                         - choose:
                             - conditions: "{{ delta_2 > 0 }}"
@@ -727,7 +743,7 @@ action:
 
                     - if:
                         - condition: template
-                          value_template: "{{ volet_5 != '' and soleil_sud and delta_5 != 0 and not soleil_bascule_ouest }}"
+                          value_template: "{{ volet_5 != '' and soleil_sud and delta_5 != 0 and not est_bascule_ouest }}"
                       then:
                         - choose:
                             - conditions: "{{ delta_5 > 0 }}"
