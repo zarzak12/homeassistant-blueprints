@@ -632,10 +632,9 @@ action:
                         target: !input velux_avec_retour
                         data:
                           position: >
-                            {% if palier_num == 3 %} 0
+                            {% if palier_num == 3 %} 10
                             {% elif palier_num == 2 %} 30
-                            {% elif palier_num == 2 %} 60
-                            {% else %} 90
+                            {% else %} 60
                             {% endif %}
                       
                   # BSO → descente complète + inclinaison selon palier
