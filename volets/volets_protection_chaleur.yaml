@@ -633,8 +633,8 @@ action:
                         data:
                           position: >
                             {% if palier_num == 3 %} 10
-                            {% elif palier_num == 2 %} 30
-                            {% else %} 60
+                            {% elif palier_num == 2 %} 40
+                            {% else %} 70
                             {% endif %}
                       
                   # BSO → descente complète + inclinaison selon palier
