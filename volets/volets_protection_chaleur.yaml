@@ -632,9 +632,9 @@ action:
                         target: !input velux_avec_retour
                         data:
                           position: >
-                            {% if palier_num == 3 %} 10
-                            {% elif palier_num == 2 %} 40
-                            {% else %} 70
+                            {% if palier_num == 3 %} {{ 100 - fermeture_n3 }}
+                            {% elif palier_num == 2 %} {{ 100 - fermeture_n2 }}
+                            {% else %} {{ 100 - fermeture_n1 }}
                             {% endif %}
                       
                   # BSO → descente complète + inclinaison selon palier
@@ -672,9 +672,9 @@ action:
                     target: !input bso_avec_retour
                     data:
                       tilt_position: >
-                        {% if palier_num == 3 %} 0
-                        {% elif palier_num == 2 %} 25
-                        {% else %} 50
+                        {% if palier_num == 3 %} {{ 100 - fermeture_n3 }}
+                        {% elif palier_num == 2 %} {{ 100 - fermeture_n2 }}
+                        {% else %} {{ 100 - fermeture_n1 }}
                         {% endif %}
 
                   # Volets sans retour → delta en parallèle
