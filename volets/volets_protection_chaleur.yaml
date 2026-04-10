@@ -181,9 +181,9 @@ blueprint:
       selector:
         number:
           min: 0
-          max: 300
+          max: 120
           step: 5
-          unit_of_measurement: s
+          unit_of_measurement: "min"
       default: 30
 
     azimut_min:
@@ -523,7 +523,7 @@ action:
 
           # Délai avant volets ouest
           - delay:
-              seconds: "{{ delai_reouverture | int }}"
+              seconds: "{{ (delai_reouverture | float * 60) | int }}"
 
           # Volets ouest ensuite
           - parallel:
