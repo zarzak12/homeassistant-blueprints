@@ -600,7 +600,7 @@ action:
                   - wait_template: >
                       {% set tous_fermes = namespace(ok=true) %}
                       {% for e in bso_liste %}
-                        {% if state_attr(e, 'current_position') | int(99) > 2 %}
+                        {% if state_attr(e, 'current_position') | int(99) > 0 %}
                           {% set tous_fermes.ok = false %}
                         {% endif %}
                       {% endfor %}
