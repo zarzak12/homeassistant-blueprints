@@ -411,6 +411,10 @@ action:
       volet_5: !input volet_5
       duree_volet_5: !input duree_volet_5
 
+      fermeture_n1: !input fermeture_niveau_1
+      fermeture_n2: !input fermeture_niveau_2
+      fermeture_n3: !input fermeture_niveau_3
+
       pos_velux_louka: "{{ state_attr('cover.velux_louka', 'current_position') }}"
       pos_velux_theo: "{{ state_attr('cover.velux_theo', 'current_position') }}"
       est_bascule_ouest: "{{ trigger.id == 'soleil_bascule_ouest' }}"
@@ -433,23 +437,30 @@ action:
       ancien_palier: "{{ states(palier_precedent) | int(-1) }}"
 
       ratio: >
-        {% if palier_num == 3 %} 0.90
-        {% elif palier_num == 2 %} 0.50
-        {% elif palier_num == 1 %} 0.25
+        {% if palier_num == 3 %} {{ fermeture_n3 / 100 }}
+        {% elif palier_num == 2 %} {{ fermeture_n2 / 100 }}
+        {% elif palier_num == 1 %} {{ fermeture_n1 / 100 }}
+        {% else %} 0
+        {% endif %}
+
+      ratio_ancien: >
+        {% if ancien_palier == 3 %} {{ fermeture_n3 / 100 }}
+        {% elif ancien_palier == 2 %} {{ fermeture_n2 / 100 }}
+        {% elif ancien_palier == 1 %} {{ fermeture_n1 / 100 }}
         {% else %} 0
         {% endif %}
 
       label_palier: >
-        {% if palier_num == 3 %} 🔴 Palier 3 — 90%
-        {% elif palier_num == 2 %} 🟠 Palier 2 — 50%
-        {% elif palier_num == 1 %} 🟡 Palier 1 — 25%
+        {% if palier_num == 3 %} 🔴 Palier 3 — {{ fermeture_n3 }}%
+        {% elif palier_num == 2 %} 🟠 Palier 2 — {{ fermeture_n2 }}%
+        {% elif palier_num == 1 %} 🟡 Palier 1 — {{ fermeture_n1 }}%
         {% else %} 🟢 Palier 0 — aucune action
         {% endif %}
 
       label_ancien_palier: >
-        {% if ancien_palier == 3 %} 🔴 Palier 3 — 90%
-        {% elif ancien_palier == 2 %} 🟠 Palier 2 — 50%
-        {% elif ancien_palier == 1 %} 🟡 Palier 1 — 25%
+        {% if ancien_palier == 3 %} 🔴 Palier 3 — {{ fermeture_n3 }}%
+        {% elif ancien_palier == 2 %} 🟠 Palier 2 — {{ fermeture_n2 }}%
+        {% elif ancien_palier == 1 %} 🟡 Palier 1 — {{ fermeture_n1 }}%
         {% elif ancien_palier == 0 %} 🟢 Palier 0
         {% else %} ❓ Inconnu
         {% endif %}
@@ -582,14 +593,6 @@ action:
               cible_3: "{{ (duree_volet_3 | float * ratio | float) | int }}"
               cible_4: "{{ (duree_volet_4 | float * ratio | float) | int }}"
               cible_5: "{{ (duree_volet_5 | float * ratio | float) | int }}"
-
-              # Secondes déjà descendues selon l'ancien palier
-              ratio_ancien: >
-                {% if ancien_palier == 3 %} 0.90
-                {% elif ancien_palier == 2 %} 0.50
-                {% elif ancien_palier == 1 %} 0.25
-                {% else %} 0
-                {% endif %}
 
               deja_1: "{{ (duree_volet_1 | float * ratio_ancien | float) | int }}"
               deja_2: "{{ (duree_volet_2 | float * ratio_ancien | float) | int }}"
