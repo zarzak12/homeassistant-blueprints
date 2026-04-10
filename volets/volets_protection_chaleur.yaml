@@ -621,11 +621,22 @@ action:
               - conditions: "{{ palier_num in [1,2,3] }}"
                 sequence:
 
-                  # BSO → descente complète + inclinaison selon palier
-                  - action: cover.set_cover_position
-                    target: !input velux_avec_retour
-                    data:
-                      position: 25
+                  # Velux → remontée complète + lames horizontales
+                  # UNIQUEMENT si les deux velux ne sont pas fermés
+                  - if:
+                      - condition: template
+                        value_template: >
+                          {{ pos_velux_louka != 0 and pos_velux_theo != 0 }}
+                    then:
+                      - action: cover.set_cover_position
+                        target: !input velux_avec_retour
+                        data:
+                          position: >
+                            {% if palier_num == 3 %} 0
+                            {% elif palier_num == 2 %} 30
+                            {% elif palier_num == 2 %} 60
+                            {% else %} 90
+                            {% endif %}
                       
                   # BSO → descente complète + inclinaison selon palier
                   - action: cover.set_cover_position
