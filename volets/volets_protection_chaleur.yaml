@@ -154,7 +154,7 @@ blueprint:
           unit_of_measurement: %
       default: 30
 
-      fermeture_niveau_2:
+    fermeture_niveau_2:
       name: "Niveau de fermeture pallier 2 (%)"
       selector:
         number:
@@ -164,7 +164,7 @@ blueprint:
           unit_of_measurement: %
       default: 60
 
-      fermeture_niveau_3:
+    fermeture_niveau_3:
       name: "Niveau de fermeture pallier 3 (%)"
       selector:
         number:
