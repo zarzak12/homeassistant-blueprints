@@ -151,7 +151,7 @@ blueprint:
           min: 0
           max: 100
           step: 1
-          unit_of_measurement: %
+          unit_of_measurement: "%"
       default: 30
 
     fermeture_niveau_2:
@@ -161,7 +161,7 @@ blueprint:
           min: 0
           max: 100
           step: 1
-          unit_of_measurement: %
+          unit_of_measurement: "%"
       default: 60
 
     fermeture_niveau_3:
@@ -171,7 +171,7 @@ blueprint:
           min: 0
           max: 100
           step: 1
-          unit_of_measurement: %
+          unit_of_measurement: "%"
       default: 90
 
     # ── Délai entre réouverture sud et ouest ──────────────────
