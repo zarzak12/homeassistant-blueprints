@@ -144,6 +144,36 @@ blueprint:
           unit_of_measurement: s
       default: 20
 
+    fermeture_niveau_1:
+      name: "Niveau de fermeture pallier 1 (%)"
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: %
+      default: 30
+
+      fermeture_niveau_2:
+      name: "Niveau de fermeture pallier 2 (%)"
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: %
+      default: 60
+
+      fermeture_niveau_3:
+      name: "Niveau de fermeture pallier 3 (%)"
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: %
+      default: 90
+
     # ── Délai entre réouverture sud et ouest ──────────────────
     delai_reouverture:
       name: "Délai entre réouverture volets sud et ouest (secondes)"
