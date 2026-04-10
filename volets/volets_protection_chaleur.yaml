@@ -584,8 +584,30 @@ action:
                     data:
                       position: 0
 
-                  - delay:
-                      seconds: 60
+                  # Attendre que tous les BSO soient en position basse
+                  - variables:
+                      bso_target: !input bso_avec_retour
+                      bso_liste: >
+                        {% set t = bso_target %}
+                        {% if t.entity_id is string %}
+                          {{ [t.entity_id] }}
+                        {% elif t.entity_id is iterable %}
+                          {{ t.entity_id | list }}
+                        {% else %}
+                          {{ [] }}
+                        {% endif %}
+
+                  - wait_template: >
+                      {% set tous_fermes = namespace(ok=true) %}
+                      {% for e in bso_liste %}
+                        {% if state_attr(e, 'current_position') | int(99) > 2 %}
+                          {% set tous_fermes.ok = false %}
+                        {% endif %}
+                      {% endfor %}
+                      {{ tous_fermes.ok }}
+                    timeout:
+                      seconds: 90
+                    continue_on_timeout: true
 
                   - action: cover.set_cover_tilt_position
                     target: !input bso_avec_retour
