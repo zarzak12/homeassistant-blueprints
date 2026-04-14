@@ -520,6 +520,14 @@ action:
                 - action: cover.open_cover
                   target:
                     entity_id: "{{ volet_2 }}"
+            
+            - if:
+                - condition: template
+                  value_template: "{{ volet_5 != '' }}"
+              then:
+                - action: cover.open_cover
+                  target:
+                    entity_id: "{{ volet_5 }}"
 
           # Délai avant volets ouest
           - delay:
@@ -542,14 +550,6 @@ action:
                 - action: cover.open_cover
                   target:
                     entity_id: "{{ volet_4 }}"
-
-            - if:
-                - condition: template
-                  value_template: "{{ volet_5 != '' }}"
-              then:
-                - action: cover.open_cover
-                  target:
-                    entity_id: "{{ volet_5 }}"
 
           # Remise à zéro du palier mémorisé
           - action: input_number.set_value
