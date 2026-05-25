@@ -672,8 +672,8 @@ action:
                     target: !input bso_avec_retour
                     data:
                       tilt_position: >
-                        {% if palier_num == 3 %} {{ 100 }}
-                        {% elif palier_num == 2 %} {{ 100 }}
+                        {% if palier_num == 3 %} {{ 0 }}
+                        {% elif palier_num == 2 %} {{ 0 }}
                         {% else %} {{ 100 - fermeture_n2 }}
                         {% endif %}
 
