@@ -682,7 +682,7 @@ action:
 
                     - if:
                         - condition: template
-                          value_template: "{{ volet_1 != '' and soleil_sud and delta_1 != 0 and not est_bascule_ouest }}"
+                          value_template: "{{ volet_1 != '' and delta_1 != 0 }}"
                       then:
                         - choose:
                             - conditions: "{{ delta_1 > 0 }}"
@@ -708,7 +708,7 @@ action:
 
                     - if:
                         - condition: template
-                          value_template: "{{ volet_2 != '' and soleil_sud and delta_2 != 0 and not est_bascule_ouest}}"
+                          value_template: "{{ volet_2 != '' and delta_2 != 0 }}"
                       then:
                         - choose:
                             - conditions: "{{ delta_2 > 0 }}"
@@ -786,7 +786,7 @@ action:
 
                     - if:
                         - condition: template
-                          value_template: "{{ volet_5 != '' and soleil_sud and delta_5 != 0 and not est_bascule_ouest }}"
+                          value_template: "{{ volet_5 != '' and delta_5 != 0 }}"
                       then:
                         - choose:
                             - conditions: "{{ delta_5 > 0 }}"
