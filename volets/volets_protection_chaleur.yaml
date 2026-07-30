@@ -395,8 +395,8 @@ action:
       az_max: !input azimut_max
       palier_precedent: !input palier_precedent
       delai_reouverture: !input delai_reouverture
-      temp_ext: "{{ states(capteur_temp_ext) | float(0) }}"
-      temp_int: "{{ states(capteur_temp_int) | float(0) }}"
+      temp_ext: "{{ states(capteur_temp_ext) | float(0) |round(1) }}"
+      temp_int: "{{ states(capteur_temp_int) | float(0) |round(1) }}"
       azimut: "{{ state_attr('sun.sun', 'azimuth') | float(0) }}"
       azimut_ouest: !input azimut_ouets
       soleil_actif: "{{ azimut > az_min and azimut < az_max }}"
