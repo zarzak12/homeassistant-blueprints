@@ -221,7 +221,21 @@ blueprint:
           step: 5
           unit_of_measurement: "°"
       default: 270
-
+      
+    elevation_min:
+      name: "Élévation minimale du soleil (°)"
+      description: >
+        En dessous de cette élévation, le soleil est considéré hors zone
+        et les volets se réouvrent. Permet d'anticiper la réouverture en hiver.
+        Défaut : 5°
+      selector:
+        number:
+          min: 0
+          max: 30
+          step: 1
+          unit_of_measurement: "°"
+      default: 5
+      
     periode_active:
       name: "Période active"
       selector:
@@ -382,6 +396,11 @@ trigger:
     entity_id: sun.sun
     attribute: azimuth
     above: !input azimut_ouets
+  - platform: numeric_state
+    id: soleil_sous_elevation
+    entity_id: sun.sun
+    attribute: elevation
+    below: !input elevation_min
 
 condition: []
 
@@ -399,7 +418,9 @@ action:
       temp_int: "{{ states(capteur_temp_int) | float(0) |round(1) }}"
       azimut: "{{ state_attr('sun.sun', 'azimuth') | float(0) }}"
       azimut_ouest: !input azimut_ouets
-      soleil_actif: "{{ azimut > az_min and azimut < az_max }}"
+      elevation_min: !input elevation_min
+      elevation: "{{ state_attr('sun.sun', 'elevation') | float(0) }}"
+      soleil_actif: "{{ azimut > az_min and azimut < az_max and elevation > elevation_min }}"
       soleil_sud: "{{ azimut > az_min and azimut <= azimut_ouest }}"
       soleil_ouest: "{{ azimut > azimut_ouest and azimut < az_max }}"
       chaude_ext_p1: !input chaude_ext_p1
@@ -489,6 +510,7 @@ action:
         {% elif ancien_palier == 0 %} 🟢 Palier 0
         {% else %} ❓ Inconnu
         {% endif %}
+
 
   # ── Choix du scénario : soleil actif ou fin de journée ─────
   - choose:
@@ -589,8 +611,11 @@ action:
             type: notify
             title: "🪟 Volets — Réouverture fin de journée"
             message: >
-              ☀️ Soleil sorti de la zone (azimut {{ azimut | round(1) }}°)
-              Volets sud remontés, puis volets ouest.
+              {% if elevation <= elevation_min %}
+              🌅 Soleil trop bas ({{ elevation | round(1) }}° < {{ elevation_min }}°)
+              {% else %}
+              ☀️ Soleil hors zone (azimut {{ azimut | round(1) }}°)
+              {% endif %}
               🌡️ Ext : {{ temp_ext }}°C  |  Int : {{ temp_int }}°C
               🕐 {{ now().strftime('%H:%M') }}
 
